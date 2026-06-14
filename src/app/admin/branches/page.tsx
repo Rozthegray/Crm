@@ -32,12 +32,12 @@ export default function RealBranchAdminDashboard() {
     try {
       const res = await getBranchDirectory();
       if (res.success) {
-        setAdminName(res.adminName);
-        setBranchName(res.branchName);
-        setBranchLocation(res.branchLocation);
-        setActiveStaff(res.active);
-        setPendingStaff(res.pending);
-      } else {
+        // Adding the || '' ensures it's always a string, keeping TypeScript happy!
+        setAdminName(res.adminName || 'Admin');
+        setBranchName(res.branchName || 'Unassigned Branch');
+        setBranchLocation(res.branchLocation || 'Location Pending');
+        setActiveStaff(res.active || []);
+      }else {
         setErrorMsg(res.error);
       }
     } catch (error) {

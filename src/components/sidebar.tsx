@@ -18,7 +18,7 @@ export default function Sidebar() {
     { name: 'Leave Approvals', href: '/hr/leaves', icon: Clock, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Personnel & HR', href: '/hr/employees', icon: Users, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Payroll Engine', href: '/hr/payroll', icon: FileText, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
-    { name: 'Local Command', href: '/admin', icon: Activity, roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Local Command', href: '/admin/branches', icon: Activity, roles: ['ADMIN', 'SUPER_ADMIN'] },
     { name: 'Global God Mode', href: '/admin/branches', icon: Globe, roles: ['SUPER_ADMIN'] },
     { name: 'Comms Network', href: '/dashboard/chat', icon: MessageSquare, roles: ['STAFF', 'HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Audit Logs', href: '/admin/audit-logs', icon: ShieldAlert, roles: ['ADMIN', 'SUPER_ADMIN'] },
