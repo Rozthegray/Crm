@@ -7,7 +7,8 @@ import { db } from '@/lib/db';
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
-    if (!session) return new NextResponse("Unauthorized", { status: 401 });
+    // Adding !session.user guarantees to TypeScript that the user object exists
+    if (!session || !session.user) return new NextResponse("Unauthorized", { status: 401 });
 
     // 0. Await the params object (Next.js 15+ requirement)
     const resolvedParams = await params;
