@@ -37,8 +37,9 @@ export default function RealBranchAdminDashboard() {
         setBranchName(res.branchName || 'Unassigned Branch');
         setBranchLocation(res.branchLocation || 'Location Pending');
         setActiveStaff(res.active || []);
-      }else {
-        setErrorMsg(res.error);
+      } else {
+        // Adding the fallback string satisfies the TypeScript compiler perfectly
+        setErrorMsg(res.error || "Failed to load branch data.");
       }
     } catch (error) {
       setErrorMsg("Failed to connect to branch secure database.");
