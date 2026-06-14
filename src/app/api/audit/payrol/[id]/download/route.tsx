@@ -23,7 +23,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (!payroll) return new NextResponse("Not Found", { status: 404 });
 
     // Security Check: Ensure the user is either the owner or an Admin/HR
-// Security Check: Ensure the user is either the owner or an Admin/HR
     const currentUser = session.user as any; // Bypasses NextAuth's default type limits
     if (payroll.userId !== currentUser.id && currentUser.role === 'STAFF') {
       return new NextResponse("Forbidden", { status: 403 });
@@ -45,7 +44,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const pdfBuffer = await renderToBuffer(<PayslipDocument data={pdfData} />);
 
     // 4. Return as a downloadable file
-    return new NextResponse(pdfBuffer, {
+    // Casting to any bypasses the strict Web API type check for the Node Buffer
+    return new NextResponse(pdfBuffer as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="Payslip_${payroll.payPeriod.replace(' ', '_')}.pdf"`,
