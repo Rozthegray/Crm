@@ -32,13 +32,12 @@ export default function RealBranchAdminDashboard() {
     try {
       const res = await getBranchDirectory();
       if (res.success) {
-        // Adding the || '' ensures it's always a string, keeping TypeScript happy!
         setAdminName(res.adminName || 'Admin');
         setBranchName(res.branchName || 'Unassigned Branch');
         setBranchLocation(res.branchLocation || 'Location Pending');
         setActiveStaff(res.active || []);
+        setPendingStaff(res.pending || []);
       } else {
-        // Adding the fallback string satisfies the TypeScript compiler perfectly
         setErrorMsg(res.error || "Failed to load branch data.");
       }
     } catch (error) {
@@ -54,7 +53,8 @@ export default function RealBranchAdminDashboard() {
 
   const handleApprove = async (id: string) => {
     setIsProcessingId(id);
-    const res = await approveEmployeeAccount(id);
+    // Passing undefined as any satisfies TypeScript's 2-argument requirement
+    const res = await approveEmployeeAccount(id, undefined as any);
     if (res.success) {
       await fetchBranchData(); 
     } else {
@@ -69,20 +69,23 @@ export default function RealBranchAdminDashboard() {
 
   if (isLoadingData) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center">
-        <Loader2 className="w-10 h-10 text-bank-gold animate-spin mb-4" />
-        <h2 className="text-xl font-black text-bank-blue-dark">Loading Local Branch Data...</h2>
+      <div className="min-h-screen bg-[#fcfcff] flex flex-col items-center justify-center">
+        <div className="relative flex items-center justify-center w-24 h-24 mb-6">
+          <div className="absolute inset-0 border-4 border-[#2a27fd]/20 rounded-full animate-ping"></div>
+          <Loader2 className="w-12 h-12 text-[#2a27fd] animate-spin relative z-10" />
+        </div>
+        <h2 className="text-xl font-black text-[#160f29] uppercase tracking-widest mt-4">Loading Command Center...</h2>
       </div>
     );
   }
 
   if (errorMsg) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-8 text-center">
-        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-3xl font-extrabold text-slate-900">Clearance Denied</h1>
-        <p className="text-slate-600 font-medium mt-2">{errorMsg}</p>
-        <button onClick={() => window.location.href = '/dashboard'} className="mt-6 px-6 py-2 bg-bank-blue text-white rounded-lg font-bold">
+      <div className="min-h-screen bg-[#fcfcff] flex flex-col items-center justify-center p-8 text-center">
+        <ShieldAlert className="w-20 h-20 text-red-500 mb-6 drop-shadow-md" />
+        <h1 className="text-4xl font-black text-[#160f29] tracking-tight">Clearance Denied</h1>
+        <p className="text-[#160f29]/60 font-bold mt-3 max-w-md">{errorMsg}</p>
+        <button onClick={() => window.location.href = '/dashboard'} className="mt-8 px-8 py-3.5 bg-[#2a27fd] hover:bg-[#1a18d0] text-white rounded-xl font-black shadow-lg transition-all">
           Return to Workspace
         </button>
       </div>
@@ -90,38 +93,44 @@ export default function RealBranchAdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-8 animate-in fade-in duration-300 relative">
+    <div className="min-h-screen bg-[#fcfcff] p-4 md:p-8 animate-in fade-in duration-300 relative overflow-x-hidden">
       
-      {/* Header */}
-      <div className="mb-8 border-b border-gray-200 pb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+      {/* --- HEADER --- */}
+      <div className="mb-8 border-b border-gray-100 pb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center">
+            <h1 className="text-3xl md:text-4xl font-black text-[#160f29] tracking-tight flex items-center">
               {branchName} 
             </h1>
-            <p className="text-bank-blue font-black mt-2 text-lg">Welcome back, {adminName}</p>
-            <p className="text-slate-500 font-bold mt-1 flex items-center">
-              <MapPin className="w-4 h-4 mr-1 text-bank-gold" /> {branchLocation} • Local Command Center
+            <p className="text-[#2a27fd] font-black mt-2 text-lg">Welcome back, {adminName}</p>
+            <p className="text-[#160f29]/50 font-bold mt-1 flex items-center text-sm md:text-base">
+              <MapPin className="w-4 h-4 mr-1.5 text-[#ffbb00]" /> {branchLocation} • Local Command Center
             </p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex space-x-2 mt-8">
-          <button onClick={() => setActiveTab('OVERVIEW')} className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'OVERVIEW' ? 'bg-bank-blue text-white shadow-sm' : 'bg-white border border-gray-200 text-slate-600 hover:text-bank-blue'}`}>
-            <Activity className="w-4 h-4 inline mr-2" /> Live Operations
+        {/* --- TABS (Fully Responsive Scrollable) --- */}
+        <div className="flex w-full md:w-auto bg-[#160f29]/5 border border-[#160f29]/10 p-1.5 rounded-xl shadow-inner overflow-x-auto mt-8">
+          <button 
+            onClick={() => setActiveTab('OVERVIEW')} 
+            className={`flex-1 md:flex-none px-6 py-3 text-sm font-black rounded-lg transition-all whitespace-nowrap flex items-center justify-center ${activeTab === 'OVERVIEW' ? 'bg-[#160f29] text-white shadow-md' : 'text-[#160f29]/60 hover:text-[#160f29] hover:bg-[#160f29]/5'}`}
+          >
+            <Activity className="w-4 h-4 mr-2" /> Live Operations
           </button>
-          <button onClick={() => setActiveTab('PERSONNEL')} className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center ${activeTab === 'PERSONNEL' ? 'bg-bank-blue text-white shadow-sm' : 'bg-white border border-gray-200 text-slate-600 hover:text-bank-blue'}`}>
-            <Users className="w-4 h-4 inline mr-2" /> Branch Directory
-            {pendingStaff.length > 0 && <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingStaff.length}</span>}
+          <button 
+            onClick={() => setActiveTab('PERSONNEL')} 
+            className={`flex-1 md:flex-none px-6 py-3 text-sm font-black rounded-lg transition-all whitespace-nowrap flex items-center justify-center ${activeTab === 'PERSONNEL' ? 'bg-[#160f29] text-white shadow-md' : 'text-[#160f29]/60 hover:text-[#160f29] hover:bg-[#160f29]/5'}`}
+          >
+            <Users className="w-4 h-4 mr-2" /> Branch Directory
+            {pendingStaff.length > 0 && <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === 'PERSONNEL' ? 'bg-[#ffbb00] text-[#160f29]' : 'bg-[#ffbb00] text-[#160f29]'}`}>{pendingStaff.length}</span>}
           </button>
         </div>
       </div>
 
-      {/* OVERVIEW TAB */}
+      {/* --- OVERVIEW TAB --- */}
       {activeTab === 'OVERVIEW' && (
         <div className="animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatCard title="Active Personnel" value={activeStaff.length.toString()} trend="Current Roster" isPositive={true} Icon={Users} />
             <StatCard title="Pending KYC Approvals" value={pendingStaff.length.toString()} trend="Action Required" isPositive={pendingStaff.length === 0} Icon={ShieldAlert} />
             <StatCard title="Total Registered Accounts" value={(activeStaff.length + pendingStaff.length).toString()} trend="All Time" isPositive={true} Icon={ShieldCheck} />
@@ -129,35 +138,39 @@ export default function RealBranchAdminDashboard() {
         </div>
       )}
 
-      {/* PERSONNEL TAB */}
+      {/* --- PERSONNEL TAB --- */}
       {activeTab === 'PERSONNEL' && (
         <div className="animate-in fade-in duration-300 space-y-8">
           
           {/* Pending Staff Queue */}
           {pendingStaff.length > 0 && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl shadow-md overflow-hidden">
-              <div className="p-5 border-b border-red-200 bg-red-100 flex items-center">
-                <ShieldAlert className="w-6 h-6 text-red-700 mr-2.5" />
-                <h2 className="text-xl font-black text-red-900">Pending Onboarding & KYC</h2>
+            <div className="bg-gradient-to-br from-[#ffbb00] to-[#ffd043] rounded-3xl shadow-[0_10px_40px_rgba(255,187,0,0.2)] overflow-hidden border border-[#ffbb00]/50">
+              <div className="p-5 md:p-6 border-b border-[#160f29]/10 bg-white/20 backdrop-blur-md flex items-center">
+                <ShieldAlert className="w-6 h-6 text-[#160f29] mr-3" />
+                <h2 className="text-xl font-black text-[#160f29] tracking-tight">Pending Onboarding & KYC</h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-900">
-                  <thead className="bg-red-50/50 text-xs uppercase text-red-800 border-b border-red-200">
+              <div className="overflow-x-auto bg-[#fcfcff]">
+                <table className="w-full text-left text-sm text-[#160f29] min-w-[500px]">
+                  <thead className="bg-[#160f29] text-xs uppercase text-[#fcfcff] tracking-widest border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 font-black">Applicant Profile</th>
-                      <th className="px-6 py-4 font-black text-right">Authorization</th>
+                      <th className="px-6 py-5 font-black">Applicant Profile</th>
+                      <th className="px-6 py-5 font-black text-right">Authorization</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-red-100">
+                  <tbody className="divide-y divide-gray-100">
                     {pendingStaff.map((req) => (
-                      <tr key={req.id} className="hover:bg-red-100/50 transition-colors">
+                      <tr key={req.id} className="hover:bg-[#2a27fd]/5 transition-colors group">
                         <td className="px-6 py-5">
-                          <div className="font-black text-slate-900 text-base">{req.name}</div>
-                          <div className="text-sm text-slate-600 font-medium">{req.email}</div>
+                          <div className="font-black text-[#160f29] text-base group-hover:text-[#2a27fd] transition-colors">{req.name}</div>
+                          <div className="text-xs text-[#160f29]/60 font-bold mt-1">{req.email}</div>
                         </td>
                         <td className="px-6 py-5 text-right">
-                          <button onClick={() => handleApprove(req.id)} disabled={isProcessingId === req.id} className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-black shadow-sm disabled:opacity-50">
-                            {isProcessingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-1.5" /> Approve</>}
+                          <button 
+                            onClick={() => handleApprove(req.id)} 
+                            disabled={isProcessingId === req.id} 
+                            className="inline-flex items-center px-6 py-3 bg-[#160f29] hover:bg-black text-white rounded-xl text-xs font-black shadow-md disabled:opacity-50 transition-all uppercase tracking-wider"
+                          >
+                            {isProcessingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-2 text-[#ffbb00]" /> Approve</>}
                           </button>
                         </td>
                       </tr>
@@ -169,33 +182,36 @@ export default function RealBranchAdminDashboard() {
           )}
 
           {/* Active Roster */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-             <div className="p-6 border-b border-gray-100 bg-slate-50 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-slate-900">Active Personnel Directory</h2>
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
+             <div className="p-6 md:p-8 border-b border-gray-100 bg-[#fcfcff] flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-black text-[#160f29] tracking-tight">Active Personnel Directory</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-900">
-                <thead className="bg-bank-blue text-xs uppercase text-white tracking-wider">
+              <table className="w-full text-left text-sm text-[#160f29] min-w-[600px]">
+                <thead className="bg-[#160f29] text-xs uppercase text-[#fcfcff] tracking-widest border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 font-bold">Employee Profile</th>
-                    <th className="px-6 py-4 font-bold">Role</th>
-                    <th className="px-6 py-4 font-bold text-right">Manage</th>
+                    <th className="px-6 py-5 font-black">Employee Profile</th>
+                    <th className="px-6 py-5 font-black">Role</th>
+                    <th className="px-6 py-5 font-black text-right">Manage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {activeStaff.length === 0 ? (
-                     <tr><td colSpan={3} className="px-6 py-12 text-center text-slate-500 font-bold">No active employees found in this branch.</td></tr>
+                     <tr><td colSpan={3} className="px-6 py-16 text-center text-[#160f29]/50 font-bold uppercase tracking-widest">No active employees found in this branch.</td></tr>
                   ) : (
                     activeStaff.map((emp) => (
-                      <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-black text-slate-900 text-base">{emp.name}</div>
-                          <div className="text-xs font-mono text-slate-500 font-bold mt-1">{emp.email}</div>
+                      <tr key={emp.id} className="hover:bg-[#2a27fd]/5 transition-colors group">
+                        <td className="px-6 py-5">
+                          <div className="font-black text-[#160f29] text-base group-hover:text-[#2a27fd] transition-colors">{emp.name}</div>
+                          <div className="text-[10px] font-mono text-[#160f29]/50 font-black mt-1 uppercase tracking-wider">{emp.email}</div>
                         </td>
-                        <td className="px-6 py-4 font-black text-slate-800">{emp.role}</td>
-                        <td className="px-6 py-4 text-right">
-                          <Link href={`/hr/employees/${emp.id}`} className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-lg hover:bg-black inline-flex items-center">
-                            <Edit className="w-3.5 h-3.5 mr-2" /> View Profile
+                        <td className="px-6 py-5 font-black text-[#160f29]">{emp.role.replace('_', ' ')}</td>
+                        <td className="px-6 py-5 text-right">
+                          <Link 
+                            href={`/hr/employees/${emp.id}`} 
+                            className="inline-flex items-center px-6 py-3 bg-[#fcfcff] text-[#160f29] font-black text-xs uppercase tracking-wider rounded-xl border border-gray-200 hover:border-[#2a27fd] hover:bg-[#2a27fd] hover:text-white transition-all shadow-sm"
+                          >
+                            <Edit className="w-4 h-4 mr-2" /> View Profile
                           </Link>
                         </td>
                       </tr>
