@@ -1,0 +1,51 @@
+import { NextResponse } from 'next/server';
+import { renderToBuffer } from '@react-pdf/renderer';
+import { PayslipDocument } from '@/components/pdf/PayslipDocument';
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await auth();
+    if (!session) return new NextResponse("Unauthorized", { status: 401 });
+
+    // 1. Fetch the specific payroll record securely
+    const payroll = await db.payroll.findUnique({
+      where: { id: params.id },
+      include: { user: true }
+    });
+
+    if (!payroll) return new NextResponse("Not Found", { status: 404 });
+
+    // Security Check: Ensure the user is either the owner or an Admin/HR
+    if (payroll.userId !== session.user.id && session.user.role === 'STAFF') {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    // 2. Map DB data to our PDF template props
+    const pdfData = {
+      id: payroll.id,
+      employeeName: payroll.user.name,
+      role: 'Staff Member', // Or fetch from a joined Profile table
+      payPeriod: payroll.payPeriod,
+      baseSalary: payroll.baseSalary,
+      allowances: payroll.allowances,
+      deductions: payroll.deductions,
+      netPay: payroll.netPay,
+    };
+
+    // 3. Render the PDF in memory
+    const pdfBuffer = await renderToBuffer(<PayslipDocument data={pdfData} />);
+
+    // 4. Return as a downloadable file
+    return new NextResponse(pdfBuffer, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Payslip_${payroll.payPeriod.replace(' ', '_')}.pdf"`,
+      },
+    });
+  } catch (error) {
+    console.error("PDF Generation Error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}

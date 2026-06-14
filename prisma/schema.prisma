@@ -1,0 +1,224 @@
+datasource db {
+  provider = "postgresql"
+}
+
+// 2. CLIENT GENERATOR
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 3. ENUMS
+enum Role {
+  SUPER_ADMIN   // Global God-mode
+  ADMIN         // Branch Manager
+  HR            // Branch HR
+  STAFF         // Standard Employee
+}
+
+enum AccountStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+// UPGRADED: Full State Machine for Phase 1 Leave Engine
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  REJECTED
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PREGNANCY_MATERNITY
+  UNPAID
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  LOAN
+  INVESTMENT
+}
+
+// 4. CORE MODELS
+
+model Branch {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "Lagos Mainland HQ"
+  location    String
+  established DateTime @default(now())
+  users       User[]
+}
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  password         String         // Employees now set this themselves
+  name             String
+  role             Role           @default(STAFF)
+  status           AccountStatus  @default(PENDING_APPROVAL) // Locked by default
+  
+  // KYC & Compliance
+  phone            String?
+  birthDate        DateTime?
+  nin              String?        @unique // National Identity Number
+  bvn              String?        @unique // Bank Verification Number
+  address          String?
+  avatarUrl        String?        // Profile Picture
+  cvUrl            String?        // Resume/CV Upload
+  
+  // Multi-Branch Architecture
+  branchId         String?
+  branch           Branch?        @relation(fields: [branchId], references: [id])
+  
+  // Phase 2 & 3 Groundwork (Payroll & Sockets)
+  nextPayDate      DateTime?      // 30-Day Rolling Epoch
+  baseSalary       Float?
+  isOnline         Boolean        @default(false)
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  
+  // Relations
+  payrolls         Payroll[]
+  leaveRequests    LeaveRequest[]
+  auditLogs        AuditLog[]
+  managedCustomers Customer[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model Payroll {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  baseSalary  Float
+  allowances  Float    @default(0)
+  dedctions   Float    @default(0)
+  netPay      Float
+  payPeriod   String   
+  isPaid      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// UPGRADED: Phase 1 Hierarchical Leave Engine
+model LeaveRequest {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  type          LeaveType   @default(ANNUAL)
+  
+  // Time Tracker Engine
+  startDate     DateTime
+  endDate       DateTime
+  totalDays     Int
+  daysRemaining Int
+  pausedAt      DateTime?   // Timestamp for early returns
+  
+  reason        String?
+  status        LeaveStatus @default(PENDING)
+  approverId    String?     // The ID of the HR/Admin/SuperAdmin who authorized it
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status]) // Crucial for the Midnight Cron Job to quickly find ACTIVE leaves
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String   
+  entityType String   
+  entityId   String?  
+  details    Json     
+  ipAddress  String?  
+  userAgent  String?
+  severity   Severity @default(INFO)
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model Customer {
+  id                String        @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String        @unique
+  phone             String
+  dateOfBirth       DateTime
+  taxId             String?       @unique 
+  address           String
+  kycStatus         KycStatus     @default(PENDING)
+  
+  assignedManagerId String?       
+  assignedManager   User?         @relation(fields: [assignedManagerId], references: [id])
+  
+  accounts          Account[]
+  documents         KycDocument[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([lastName, firstName])
+  @@index([kycStatus])
+}
+
+model Account {
+  id            String      @id @default(cuid())
+  accountNumber String      @unique
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  type          AccountType
+  balance       Float       @default(0.0)
+  currency      String      @default("USD")
+  isActive      Boolean     @default(true)
+  openedAt      DateTime    @default(now())
+
+  @@index([customerId])
+}
+
+model KycDocument {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  documentType String   
+  fileUrl      String   
+  uploadedAt   DateTime @default(now())
+  verifiedAt   DateTime?
+  verifiedBy   String?  
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  createdAt  DateTime @default(now())
+
+  senderId   String
+  receiverId String
+
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
