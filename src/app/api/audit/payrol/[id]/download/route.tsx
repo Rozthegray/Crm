@@ -4,14 +4,18 @@ import { PayslipDocument } from '@/components/pdf/PayslipDocument';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
+    // 0. Await the params object (Next.js 15+ requirement)
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+
     // 1. Fetch the specific payroll record securely
     const payroll = await db.payroll.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { user: true }
     });
 
