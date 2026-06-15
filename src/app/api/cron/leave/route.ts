@@ -31,8 +31,9 @@ export async function GET(req: Request) {
     }
 
     // 3. The Countdown Engine
-    const transactions = activeLeaves.map(leave => {
-      // Subtract 1 day, ensuring we never drop below 0
+// 3. The Countdown Engine
+    const transactions = activeLeaves.map((leave: any) => {
+      // Subtract 1 day, ensuring we never drop below 0      // Subtract 1 day, ensuring we never drop below 0
       const newRemaining = Math.max(0, leave.daysRemaining - 1);
       
       // If they hit 0, their leave is officially complete
