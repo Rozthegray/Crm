@@ -11,10 +11,11 @@ const session = await auth();
     }
 
   const body = await req.json();
-  
+
 // Pass them as standard comma-separated arguments
+   // Pass them as standard comma-separated arguments
     await logSystemEvent(
-      session.user.id,     // 1st argument: userId
+      currentUser.id,      // 1st argument: Use the type-safe currentUser we defined above
       body.action,         // 2nd argument: action
       body.entityType,     // 3rd argument: entityType
       body.entityId,       // 4th argument: entityId
