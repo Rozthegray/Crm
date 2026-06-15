@@ -3,11 +3,12 @@ import { logSystemEvent } from "@/lib/audit";
 import { auth } from "@/lib/auth"; // Your NextAuth instance
 
 export async function POST(req: Request) {
-  const session = await auth();
-  
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
+const session = await auth();
+    const currentUser = session?.user as any;
+    
+    if (!session || !currentUser || currentUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
 
   const body = await req.json();
 
