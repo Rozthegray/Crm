@@ -28,7 +28,8 @@ export async function GET(req: Request) {
     }
 
     // 2. The Email Generation Loop
-    const emailPromises = birthdayUsers.map(user => {
+   // 2. The Email Generation Loop
+    const emailPromises = birthdayUsers.map((user: any) => {
       const firstName = user.name.split(' ')[0];
 
       return resend.emails.send({
