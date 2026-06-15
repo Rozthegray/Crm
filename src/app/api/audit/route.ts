@@ -11,14 +11,15 @@ const session = await auth();
     }
 
   const body = await req.json();
-
-  await logSystemEvent({
-    userId: session.user.id,
-    action: body.action,
-    entityType: body.entityType,
-    details: body.details,
-    severity: body.severity,
-  });
+  
+// Pass them as standard comma-separated arguments
+    await logSystemEvent(
+      session.user.id,     // 1st argument: userId
+      body.action,         // 2nd argument: action
+      body.entityType,     // 3rd argument: entityType
+      body.entityId,       // 4th argument: entityId
+      body.details         // 5th argument: details (optional)
+    );
 
   return NextResponse.json({ success: true });
 }
