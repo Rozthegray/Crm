@@ -25,6 +25,7 @@ export async function GET(req: Request) {
     }
 
     // 2. Process each employee (Generate Ledger & Reset Epoch)
+// 2. Process each employee (Generate Ledger & Reset Epoch)
     const transactions = eligibleEmployees.map(emp => {
       const nextPay = new Date();
       nextPay.setDate(nextPay.getDate() + 30); // Advance 30 days
