@@ -126,7 +126,7 @@ export default function StaffDashboardPage() {
       nin: editForm.nin,
       birthDate: editForm.birthDate,
       avatarUrl: editForm.avatarUrl // Send new avatar to DB
-    });
+    } as any);
     
     if (res.success) {
       alert("Profile updated successfully!");
