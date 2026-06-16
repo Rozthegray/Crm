@@ -77,7 +77,10 @@ export default function CommsNetworkPage() {
     });
 
     return () => {
-      pusherClient.unsubscribe(`private-user-${session.user.id}`);
+      const currentUser = session?.user as any;
+      if (currentUser?.id) {
+        pusherClient.unsubscribe(`private-user-${currentUser.id}`);
+      }
     };
   }, [session]);
 
