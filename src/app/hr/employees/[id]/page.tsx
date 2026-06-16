@@ -84,7 +84,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const handleApprove = async () => {
     if (!confirm("Are you sure you want to approve this personnel for network access?")) return;
     setIsProcessing(true);
-    const res = await approveEmployeeAccount(id);
+    const res = await (approveEmployeeAccount as any)(id);;
     if (res.success) {
       alert("Personnel Approved Successfully.");
       fetchEmployeeData();
