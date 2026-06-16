@@ -47,7 +47,8 @@ export default function StaffDashboardPage() {
           phone: user.phone || '', 
           address: user.address || '',
           nin: user.nin || '',
-          birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : ''
+          birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '',
+          avatarUrl: user.avatarUrl || '' // <-- Added the missing property here!
         });
       }
       setIsLoading(false);
