@@ -42,7 +42,8 @@ export default function LeaveManagementPortal() {
     if (!startDate || !endDate) return alert("Please select your leave dates.");
     
     setIsSubmitting(true);
-    const res = await submitLeaveRequest({ type: leaveType, startDate, endDate, reason });
+    
+    const res = await submitLeaveRequest({ type: leaveType, startDate, endDate, reason } as any);
     
     if (res.success) {
       alert("Leave request successfully submitted to the Authorization Queue.");
