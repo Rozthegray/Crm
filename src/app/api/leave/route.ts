@@ -6,7 +6,9 @@ import { auth } from "@/lib/auth";
 export async function GET(req: Request) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {
+    const currentUser = session?.user as any;
+    
+    if (!session || !currentUser || (currentUser.role !== "HR" && currentUser.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
     }
 
@@ -27,7 +29,9 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {
+    const currentUser = session?.user as any;
+    
+    if (!session || !currentUser || (currentUser.role !== "HR" && currentUser.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -42,7 +46,7 @@ export async function PATCH(req: Request) {
       where: { id: leaveId },
       data: {
         status: status,
-        reviewedBy: session.user.id,
+        reviewedBy: currentUser.id, // Use the bypassed currentUser here
       },
       include: { user: true }
     });
