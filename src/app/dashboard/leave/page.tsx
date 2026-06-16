@@ -27,7 +27,8 @@ export default function LeaveManagementPortal() {
     setIsLoading(true);
     const res = await getMyLeaveHistory();
     if (res.success) {
-      setHistory(res.history || res.data || res.leaves || []);
+      const responseData = res as any; // Bypass the strict return type
+      setHistory(responseData.history || responseData.data || responseData.leaves || []);
     }
     setIsLoading(false);
   };
