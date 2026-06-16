@@ -36,16 +36,18 @@ export default function StaffDashboardPage() {
       if (res.success) {
         setData(res);
         // Pre-fill the edit form with existing data
-        const responseData = res as any; // Bypass the strict return type
-        const nameParts = responseData?.userData?.name ? responseData.userData.name.split(' ') : ['', ''];
+        // Pre-fill the edit form with existing data
+        const responseData = res as any; 
+        const user = responseData?.userData || {}; // Safely extract userData, or default to an empty object
+        const nameParts = user.name ? user.name.split(' ') : ['', ''];
+        
         setEditForm({ 
           firstName: nameParts[0] || '', 
           lastName: nameParts.slice(1).join(' ') || '',
-          phone: res.userData.phone || '', 
-          address: res.userData.address || '',
-          nin: res.userData.nin || '',
-          birthDate: res.userData.birthDate ? new Date(res.userData.birthDate).toISOString().split('T')[0] : '',
-          avatarUrl: res.userData.avatarUrl || ''
+          phone: user.phone || '', 
+          address: user.address || '',
+          nin: user.nin || '',
+          birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : ''
         });
       }
       setIsLoading(false);
