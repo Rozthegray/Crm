@@ -36,7 +36,7 @@ export default function LoginPage() {
       setIsLoading(false);
     } else {
       const session = await getSession();
-      const role = session?.user?.role;
+      const role = (session?.user as any)?.role;
 
       if (callbackUrl && callbackUrl !== '/' && callbackUrl !== '/login') {
         router.push(callbackUrl);
