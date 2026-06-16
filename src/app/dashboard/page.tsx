@@ -36,7 +36,8 @@ export default function StaffDashboardPage() {
       if (res.success) {
         setData(res);
         // Pre-fill the edit form with existing data
-        const nameParts = res.userData.name ? res.userData.name.split(' ') : ['', ''];
+        const responseData = res as any; // Bypass the strict return type
+        const nameParts = responseData?.userData?.name ? responseData.userData.name.split(' ') : ['', ''];
         setEditForm({ 
           firstName: nameParts[0] || '', 
           lastName: nameParts.slice(1).join(' ') || '',
