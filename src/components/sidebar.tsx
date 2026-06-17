@@ -7,9 +7,9 @@ import { useSession, signOut } from 'next-auth/react';
 import { LayoutDashboard, Users, FileText, Calendar, Clock, LogOut, MessageSquare, ShieldAlert, Activity, Globe } from 'lucide-react';
 
 export default function Sidebar() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const role = session?.user?.role;
+const pathname = usePathname();
+   const { data: session } = useSession();
+   const role = (session?.user as any)?.role;
 
   // Define route visibility based on the upgraded RBAC
   const navigation = [
