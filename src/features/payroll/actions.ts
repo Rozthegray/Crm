@@ -46,8 +46,9 @@ const { role, branchId } = session.user as any;
     });
 
     // Calculate KPIs
-    const totalDisbursed = historicalPayrolls.reduce((sum, p) => sum + p.netPay, 0);
-    const totalPending = pendingPayrolls.reduce((sum, p) => sum + p.netPay, 0);
+// Calculate KPIs
+      const totalDisbursed = historicalPayrolls.reduce((sum: any, p: any) => sum + p.netPay, 0);
+      const totalPending = pendingPayrolls.reduce((sum: any, p: any) => sum + p.netPay, 0);
 
     return { 
       success: true, 
