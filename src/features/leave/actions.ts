@@ -32,11 +32,11 @@ export async function submitLeaveRequest(formData: FormData) {
   }
 
   try {
-    const leave = await db.leaveRequest.create({
-      data: {
-        userId: session.user.id,
-        type,
-        startDate,
+   const leave = await db.leaveRequest.create({
+        data: {
+          userId: session.user.id as string,
+          type,
+          startDate,
         endDate,
         totalDays,
         daysRemaining: totalDays, // Initial remaining days equals total days
