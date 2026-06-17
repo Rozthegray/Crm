@@ -75,8 +75,8 @@ export async function getPendingLeaveRequests() {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
-  const { role, branchId } = session.user;
-
+const { role, branchId } = session.user as any;
+  
   // Hierarchical Routing Logic
   let targetRoles: string[] = [];
   if (role === 'HR') targetRoles = ['STAFF'];
