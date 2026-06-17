@@ -71,11 +71,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
+async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
-        session.user.branchId = token.branchId as string;
+        const customSessionUser = session.user as any;
+        customSessionUser.role = token.role as string;
+        customSessionUser.id = token.id as string;
+        customSessionUser.branchId = token.branchId as string; 
       }
       return session;
     }
