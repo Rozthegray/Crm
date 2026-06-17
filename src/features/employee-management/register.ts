@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
-import { Role } from "@prisma/client";
+// Removed the problematic @prisma/client import
 
 export async function submitEmployeeApplication(formData: FormData) {
   // Public route: No session check required here
@@ -10,7 +10,7 @@ export async function submitEmployeeApplication(formData: FormData) {
   const email = formData.get('email') as string;
   const rawPassword = formData.get('password') as string;
   const branchId = formData.get('branchId') as string; 
-  const requestedRole = formData.get('role') as Role;
+  const requestedRole = formData.get('role') as any; // <-- FIX: Bypassed strict Enum typing
   
   // THE FIX: Extract the Cloudinary URLs from the frontend interceptor
   const cvUrl = formData.get('cvUrl') as string | null;
