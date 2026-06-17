@@ -7,9 +7,11 @@ export async function approveEmployeeAccount(userIdToApprove: string) {
   const session = await auth();
   
   // Security Check: Only HR or SUPER_ADMIN can approve
-  if (!session || !['HR', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error("Unauthorized");
-  }
+// Security Check: Only HR or SUPER_ADMIN can approve
+   const currentUser = session?.user as any;
+   if (!session || !currentUser || !['HR', 'SUPER_ADMIN'].includes(currentUser.role)) {
+     throw new Error("Unauthorized");
+   }
 
   // 1. Fetch the user to ensure HR isn't approving someone from another branch
   const targetUser = await db.user.findUnique({ where: { id: userIdToApprove } });
