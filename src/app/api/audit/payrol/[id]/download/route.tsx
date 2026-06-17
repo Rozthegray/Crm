@@ -38,7 +38,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       payPeriod: payroll.payPeriod,
       baseSalary: payroll.baseSalary,
       allowances: payroll.allowances,
-      deductions: payroll.deductions,
+      deductions: payroll.dedctions, 
       netPay: payroll.netPay,
     };
 
