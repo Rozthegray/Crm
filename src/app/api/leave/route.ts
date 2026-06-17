@@ -46,7 +46,6 @@ export async function PATCH(req: Request) {
       where: { id: leaveId },
       data: {
         status: status,
-        reviewedBy: currentUser.id, // Use the bypassed currentUser here
       },
       include: { user: true }
     });
