@@ -41,12 +41,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     setIsLoading(true);
     const res = await getEmployeeById(id);
     if (res.success) {
-      setEmployee(res.employee);
-      
-      const nameParts = res.employee.name ? res.employee.name.split(' ') : ['', ''];
-      
-      setEditForm({
-        firstName: nameParts[0] || '', 
+  setEmployee(res.employee);
+       
+       const employeeName = res.employee?.name || '';
+       const nameParts = employeeName ? employeeName.split(' ') : ['', ''];
+       
+       setEditForm({
+         firstName: nameParts[0] || '',
         lastName: nameParts.slice(1).join(' ') || '',
         phone: res.employee.phone || '', 
         address: res.employee.address || '',
