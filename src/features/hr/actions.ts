@@ -8,12 +8,12 @@ const verifyHrClearance = async () => {
   const session = await auth();
   
   // ALLOW BOTH HR AND BRANCH ADMINS TO MANAGE PERSONNEL
-// ALLOW BOTH HR AND BRANCH ADMINS TO MANAGE PERSONNEL
-   const currentUser = session?.user as any;
-   if (!session || !currentUser || !['HR', 'SUPER_ADMIN', 'ADMIN'].includes(currentUser.role)) {
-     throw new Error("Unauthorized: HR or Branch Admin clearance required.");
-   }
-   return currentUser;
+  const currentUser = session?.user as any;
+  if (!session || !currentUser || !['HR', 'SUPER_ADMIN', 'ADMIN'].includes(currentUser.role)) {
+    throw new Error("Unauthorized: HR or Branch Admin clearance required.");
+  }
+  return currentUser;
+}; // <-- THE MISSING BRACKET FIX IS HERE!
 
 // --- 1. FETCH ISOLATED BRANCH DATA ---
 export async function getBranchDirectory() {
@@ -57,8 +57,7 @@ export async function getBranchDirectory() {
   };
 }
 
-/// Inside src/features/hr/actions.ts
-
+// --- 2. APPROVE EMPLOYEE ---
 export async function approveEmployeeAccount(employeeId: string, baseSalaryAmount: number) {
   const adminUser = await verifyHrClearance();
 
@@ -132,8 +131,9 @@ export async function adminUpdateEmployee(employeeId: string, data: {
   baseSalary: number | null 
 }) {
   const session = await auth();
+  const currentUser = session?.user as any; // Type bypass added here too for safety!
   
-  if (!session || !session.user || session.user.role === 'STAFF') {
+  if (!session || !currentUser || currentUser.role === 'STAFF') {
     return { success: false, error: "Unauthorized. Admin credentials required." };
   }
 
