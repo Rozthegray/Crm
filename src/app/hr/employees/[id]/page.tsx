@@ -41,21 +41,24 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     setIsLoading(true);
     const res = await getEmployeeById(id);
     if (res.success) {
-  setEmployee(res.employee);
-       
-       const employeeName = res.employee?.name || '';
-       const nameParts = employeeName ? employeeName.split(' ') : ['', ''];
-       
-       setEditForm({
-         firstName: nameParts[0] || '',
+      setEmployee(res.employee);
+        
+      // 1. Create a structurally safe reference to the employee object
+      const emp = (res.employee as any) || {};
+      const employeeName = emp.name || '';
+      const nameParts = employeeName ? employeeName.split(' ') : ['', ''];
+        
+      // 2. Map the form safely
+      setEditForm({
+        firstName: nameParts[0] || '',
         lastName: nameParts.slice(1).join(' ') || '',
-        phone: res.employee.phone || '', 
-        address: res.employee.address || '',
-        nin: res.employee.nin || '',
-        birthDate: res.employee.birthDate ? new Date(res.employee.birthDate).toISOString().split('T')[0] : '',
-        role: res.employee.role,
-        status: res.employee.status,
-        baseSalary: res.employee.baseSalary?.toString() || ''
+        phone: emp.phone || '', 
+        address: emp.address || '',
+        nin: emp.nin || '',
+        birthDate: emp.birthDate ? new Date(emp.birthDate).toISOString().split('T')[0] : '',
+        role: emp.role || '',
+        status: emp.status || '',
+        baseSalary: emp.baseSalary?.toString() || ''
       });
     } else {
       setErrorMsg(res.error || "Failed to load personnel data.");
@@ -85,7 +88,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const handleApprove = async () => {
     if (!confirm("Are you sure you want to approve this personnel for network access?")) return;
     setIsProcessing(true);
-    const res = await (approveEmployeeAccount as any)(id);;
+    const res = await (approveEmployeeAccount as any)(id);
     if (res.success) {
       alert("Personnel Approved Successfully.");
       fetchEmployeeData();
@@ -242,7 +245,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           
           <div className="flex flex-wrap justify-center gap-2 mt-3 relative z-10">
             <span className="px-3 py-1 bg-[#2a27fd]/20 text-[#2a27fd] text-[10px] font-black rounded-lg border border-[#2a27fd]/30 uppercase tracking-widest backdrop-blur-sm">
-              {employee.role.replace('_', ' ')}
+              {employee.role?.replace('_', ' ')}
             </span>
             <span className="px-3 py-1 bg-white/5 text-white/70 text-[10px] font-black rounded-lg border border-white/10 uppercase tracking-widest backdrop-blur-sm">
               {employee.branch?.name || 'Unassigned'}
@@ -275,7 +278,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 employee.status === 'PENDING_APPROVAL' ? 'bg-[#ffbb00]/20 text-[#160f29] border-[#ffbb00]/50' : 
                 'bg-red-100 text-red-800 border-red-300'
               }`}>
-                {employee.status.replace('_', ' ')}
+                {employee.status?.replace('_', ' ')}
               </span>
             </div>
 
@@ -420,30 +423,30 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 {/* --- HR CLEARANCE FIELDS --- */}
 
                 <div>
-  <label className="block text-[10px] font-black uppercase text-[#160f29] mb-2 tracking-wider">Access Level (Role)</label>
-  <select 
-    value={editForm.role}
-    onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-    className="w-full px-4 py-3.5 bg-slate-50 border border-gray-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#2a27fd] transition-all" 
-  >
-    <option value="STAFF">Standard Staff</option>
-    <option value="HR">Human Resources</option>
-    <option value="ADMIN">Branch Manager</option>
-    <option value="EXEC">Executive (Execo)</option>
-    <option value="IT_DIGITAL">IT &amp; Digital</option>
-    <option value="FINANCE_TREASURY">Finance / Treasury</option>
-    <option value="LEGAL">Legal</option>
-    <option value="OPERATIONS">Operations</option>
-    <option value="COMPLIANCE">Compliance</option>
-    <option value="MARKETING_COMMUNICATION">Marketing &amp; Comm</option>
-    <option value="CREDIT_RISK">Credit Risk</option>
-    <option value="AUDIT">Audit</option>
-    <option value="RECOVERY">Recovery</option>
-    <option value="CUSTOMER_EXPERIENCE">Customer Experience</option>
-    <option value="SAVINGS_MOBILISATION">Savings Mobilisation</option>
-    <option value="ENGINEERING">Engineering</option>
-  </select>
-</div>
+                  <label className="block text-[10px] font-black uppercase text-[#160f29] mb-2 tracking-wider">Access Level (Role)</label>
+                  <select 
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-gray-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#2a27fd] transition-all" 
+                  >
+                    <option value="STAFF">Standard Staff</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="ADMIN">Branch Manager</option>
+                    <option value="EXEC">Executive (Execo)</option>
+                    <option value="IT_DIGITAL">IT &amp; Digital</option>
+                    <option value="FINANCE_TREASURY">Finance / Treasury</option>
+                    <option value="LEGAL">Legal</option>
+                    <option value="OPERATIONS">Operations</option>
+                    <option value="COMPLIANCE">Compliance</option>
+                    <option value="MARKETING_COMMUNICATION">Marketing &amp; Comm</option>
+                    <option value="CREDIT_RISK">Credit Risk</option>
+                    <option value="AUDIT">Audit</option>
+                    <option value="RECOVERY">Recovery</option>
+                    <option value="CUSTOMER_EXPERIENCE">Customer Experience</option>
+                    <option value="SAVINGS_MOBILISATION">Savings Mobilisation</option>
+                    <option value="ENGINEERING">Engineering</option>
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase text-[#160f29] mb-2 tracking-wider">Account Status</label>
