@@ -26,12 +26,12 @@ export default function HrPayrollPage() {
     setIsLoading(true);
     const res = await getPayrollCommandData();
     if (res.success) {
-      setData(res);
-      const initialSalaries: Record<string, string> = {};
-      res.employees.forEach((emp: any) => {
-        initialSalaries[emp.id] = emp.baseSalary ? emp.baseSalary.toString() : '';
-      });
-      setSalaryInputs(initialSalaries);
+     setData(res);
+       const initialSalaries: Record<string, string> = {};
+       (res.employees || []).forEach((emp: any) => {
+         initialSalaries[emp.id] = emp.baseSalary ? emp.baseSalary.toString() : '';
+       });
+       setSalaryInputs(initialSalaries);
     }
     setIsLoading(false);
   };
