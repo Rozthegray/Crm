@@ -112,14 +112,15 @@ export async function sendDirectMessage(receiverId: string, content: string) {
 
   try {
     // 1. Save to the immutable database ledger
-    const savedMessage = await db.message.create({
-      data: {
-        senderId: session.user.id,
-        receiverId,
-        content
-      }
-    });
-
+    // 1. Save to the immutable database ledger
+     const savedMessage = await db.message.create({
+       data: {
+         senderId: session.user.id as string,
+         receiverId,
+         content
+       }
+     });
+    
     // 2. Transmit instantly via WebSockets (attaching the senderId so it routes correctly)
     await pusherServer.trigger(`private-user-${receiverId}`, 'secure-message', {
       message: content,
