@@ -8,11 +8,12 @@ const verifyHrClearance = async () => {
   const session = await auth();
   
   // ALLOW BOTH HR AND BRANCH ADMINS TO MANAGE PERSONNEL
-  if (!session || !['HR', 'SUPER_ADMIN', 'ADMIN'].includes(session.user.role)) {
-    throw new Error("Unauthorized: HR or Branch Admin clearance required.");
-  }
-  return session.user;
-};
+// ALLOW BOTH HR AND BRANCH ADMINS TO MANAGE PERSONNEL
+   const currentUser = session?.user as any;
+   if (!session || !currentUser || !['HR', 'SUPER_ADMIN', 'ADMIN'].includes(currentUser.role)) {
+     throw new Error("Unauthorized: HR or Branch Admin clearance required.");
+   }
+   return currentUser;
 
 // --- 1. FETCH ISOLATED BRANCH DATA ---
 export async function getBranchDirectory() {
