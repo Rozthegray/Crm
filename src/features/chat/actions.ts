@@ -34,7 +34,7 @@ export async function transmitSecureMessage(receiverId: string, content: string)
     });
 
     if (receiver && !receiver.isOnline) {
-      await sendMissedMessageEmail(receiver.email, session.user.name, content);
+    await sendMissedMessageEmail(receiver.email, session.user.name || "A Colleague", content);
     }
 
     return { success: true };
