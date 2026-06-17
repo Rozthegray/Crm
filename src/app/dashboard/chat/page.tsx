@@ -40,9 +40,9 @@ export default function CommsNetworkPage() {
       setIsLoadingChat(true);
       const res = await getChatHistory(activeContact.id);
       
-      if (res.success) {
-        const formattedHistory = res.messages.map((msg: any) => ({
-          text: msg.content,
+    if (res.success) {
+         const formattedHistory = (res.messages || []).map((msg: any) => ({
+           text: msg.content,
           isMe: msg.senderId === session?.user?.id,
           time: new Date(msg.createdAt)
         }));
