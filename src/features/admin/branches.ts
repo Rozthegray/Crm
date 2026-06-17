@@ -47,6 +47,7 @@ export async function getGlobalDashboardData() {
 
     // 3. Format branch data and calculate metrics
     // 3. Format branch data and calculate metrics
+    // 3. Format branch data and calculate metrics
     const branchData = branches.map((b: any) => {
       // Only count active staff towards the branch headcount
       const staff = b.users.filter((u: any) => u.status === 'ACTIVE');
