@@ -31,8 +31,11 @@ export default function GlobalCommsWidget() {
       if (!isOpen) setUnread((prev) => prev + 1);
     });
 
-    return () => {
-      pusherClient.unsubscribe(`private-user-${session.user.id}`);
+   return () => {
+      const currentUser = session?.user as any;
+      if (currentUser?.id) {
+        pusherClient.unsubscribe(`private-user-${currentUser.id}`);
+      }
     };
   }, [session, isOpen]);
 
