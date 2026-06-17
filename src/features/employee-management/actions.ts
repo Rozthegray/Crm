@@ -14,10 +14,11 @@ const generateEmployeeId = () => {
 
 export async function onboardNewEmployee(formData: FormData) {
   const session = await auth();
-  if (!session || session.user.role !== 'HR' && session.user.role !== 'ADMIN') {
+  const currentUser = session?.user as any;
+
+  if (!session || !currentUser || (currentUser.role !== 'HR' && currentUser.role !== 'ADMIN')) {
     throw new Error("Unauthorized access.");
   }
-
   // 1. Extract String Credentials
   const firstName = formData.get('firstName') as string;
   const lastName = formData.get('lastName') as string;
