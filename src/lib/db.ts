@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const prismaClientSingleton = () => {
@@ -8,8 +9,9 @@ const prismaClientSingleton = () => {
     throw new Error("DATABASE_URL is missing in your environment variables.");
   }
 
-  // Use the new v7 adapter pattern
-  const adapter = new PrismaPg({ connectionString: databaseUrl });
+  // Use the new v7 adapter pattern correctly with pg Pool
+  const pool = new Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
 
   return new PrismaClient({
     adapter,

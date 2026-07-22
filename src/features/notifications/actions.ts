@@ -1,27 +1,43 @@
-'use server'
+"use server";
 
-import { Resend } from 'resend';
+import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function sendSystemNotification(to: string, subject: string, message: string) {
+export async function getUserNotifications() {
   try {
-    await resend.emails.send({
-      from: 'Enterprise HR <hr@enterprisebank.com>',
-      to,
-      subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; color: #0A2540; padding: 20px;">
-          <h2 style="color: #D4AF37;">Enterprise Bank Portal</h2>
-          <p>${message}</p>
-          <hr style="border: 1px solid #e2e8f0; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #64748b;">This is an automated system message. Please do not reply.</p>
-        </div>
-      `
+    const session = await auth();
+    if (!session || !session.user) return { success: false, error: "Unauthorized" };
+
+    const notifications = await db.notification.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 20 // Keep the payload light, only show the 20 most recent
     });
+
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+
+    return { success: true, notifications, unreadCount };
+  } catch (error: any) {
+    console.error("Fetch Notifications Error:", error.message);
+    return { success: false, error: "Failed to fetch alerts" };
+  }
+}
+
+export async function markNotificationsAsRead() {
+  try {
+    const session = await auth();
+    if (!session || !session.user) return { success: false };
+
+    await db.notification.updateMany({
+      where: { 
+        userId: session.user.id,
+        isRead: false 
+      },
+      data: { isRead: true }
+    });
+
     return { success: true };
   } catch (error) {
-    console.error("Failed to send notification:", error);
     return { success: false };
   }
 }

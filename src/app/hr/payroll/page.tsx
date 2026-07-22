@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  DollarSign, FileText, CheckCircle, AlertCircle, Loader2, 
-  Users, Send, Search, Filter, ArrowUpDown, Clock
+  Banknote, FileText, CheckCircle, AlertCircle, Loader2, 
+  Users, Send, Search, Filter, ArrowUpDown, Clock, Download, ShieldAlert
 } from 'lucide-react';
 import { getPayrollCommandData, updateBaseSalary, disbursePayrolls, forceManualPayout } from '@/features/payroll/actions';
 
@@ -28,7 +28,7 @@ export default function HrPayrollPage() {
     if (res.success) {
       setData(res);
       const initialSalaries: Record<string, string> = {};
-      res.employees.forEach((emp: any) => {
+      (res.employees || []).forEach((emp: any) => {
         initialSalaries[emp.id] = emp.baseSalary ? emp.baseSalary.toString() : '';
       });
       setSalaryInputs(initialSalaries);
@@ -185,10 +185,32 @@ export default function HrPayrollPage() {
         </div>
       </div>
 
+      {/* --- PHASE 2: SECURE FINANCE EXPORT MODULE --- */}
+      <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm mb-8">
+        <div>
+          <h3 className="text-sm font-black text-[#160f29] flex items-center">
+            <ShieldAlert className="w-4 h-4 mr-2 text-[#2a27fd]" />
+            Secure Finance Handoff
+          </h3>
+          <p className="text-xs font-bold text-[#160f29]/70 mt-1">
+            Export the encrypted CSV masterlist containing active personnel salaries and banking routing details.
+          </p>
+        </div>
+        
+        {/* The One-Click Download Trigger */}
+        <a 
+          href="/api/hr/export-payroll" 
+          className="px-6 py-3.5 bg-[#2a27fd] hover:bg-[#1a18d0] text-white rounded-xl font-black shadow-lg transition-all flex items-center justify-center whitespace-nowrap"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Generate CSV for Finance
+        </a>
+      </div>
+
       {/* --- KPI GRID --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow">
-          <div className="flex items-center justify-between"><h3 className="text-[#160f29]/50 font-black text-xs uppercase tracking-widest">Total Disbursed</h3><DollarSign className="w-5 h-5 text-green-500" /></div>
+          <div className="flex items-center justify-between"><h3 className="text-[#160f29]/50 font-black text-xs uppercase tracking-widest">Total Disbursed</h3><Banknote className="w-5 h-5 text-green-500" /></div>
           <p className="text-3xl font-black text-[#160f29] mt-3 tracking-tight">₦{data.kpis.totalDisbursed.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow">
@@ -223,6 +245,20 @@ export default function HrPayrollPage() {
             <option value="ALL">All Departments</option>
             <option value="STAFF">Standard Staff</option>
             <option value="HR">Human Resources</option>
+            <option value="ADMIN">Branch Manager</option>
+            <option value="EXEC">Executive (Execo)</option>
+            <option value="IT_DIGITAL">IT &amp; Digital</option>
+            <option value="FINANCE_TREASURY">Finance / Treasury</option>
+            <option value="LEGAL">Legal Department</option>
+            <option value="OPERATIONS">Operations</option>
+            <option value="COMPLIANCE">Compliance</option>
+            <option value="MARKETING_COMMUNICATION">Marketing &amp; Comm</option>
+            <option value="CREDIT_RISK">Credit Risk</option>
+            <option value="AUDIT">Internal Audit</option>
+            <option value="RECOVERY">Recovery Unit</option>
+            <option value="CUSTOMER_EXPERIENCE">Customer Experience</option>
+            <option value="SAVINGS_MOBILISATION">Savings Mobilisation</option>
+            <option value="ENGINEERING">Core Engineering</option>
           </select>
         </div>
       </div>
@@ -242,7 +278,7 @@ export default function HrPayrollPage() {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#160f29] min-w-[700px]">
+            <table className="w-full text-left text-sm text-[#160f29] min-w-[900px]">
               <thead className="bg-[#160f29] text-xs uppercase tracking-widest text-[#fcfcff]">
                 <tr>
                   <th className="px-6 py-5 w-16">
@@ -257,6 +293,7 @@ export default function HrPayrollPage() {
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('name')}>
                     Employee <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/>
                   </th>
+                  <th className="px-6 py-5 font-black">Account Details</th>
                   <th className="px-6 py-5 font-black">Pay Period</th>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('amount')}>
                     Net Pay <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/>
@@ -266,7 +303,7 @@ export default function HrPayrollPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {processedPending.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No pending payrolls match your filters.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No pending payrolls match your filters.</td></tr>
                 ) : (
                   processedPending.map((payroll: any) => (
                     <tr key={payroll.id} className={`hover:bg-[#2a27fd]/5 transition-colors group ${selectedPayrolls.has(payroll.id) ? 'bg-[#2a27fd]/10' : ''}`}>
@@ -279,6 +316,10 @@ export default function HrPayrollPage() {
                         />
                       </td>
                       <td className="px-6 py-4"><p className="font-black text-[#160f29] text-base group-hover:text-[#2a27fd] transition-colors">{payroll.user.name}</p><p className="text-xs text-[#160f29]/60 font-bold mt-0.5">{payroll.user.role}</p></td>
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-[#160f29]">{payroll.user.bankName || 'Not Provided'}</p>
+                        <p className="text-xs font-mono text-[#160f29]/60">{payroll.user.salaryAccountNumber || 'N/A'}</p>
+                      </td>
                       <td className="px-6 py-4 font-bold text-[#160f29]/80">{payroll.payPeriod}</td>
                       <td className="px-6 py-4 font-black text-[#2a27fd] text-base">₦{payroll.netPay.toLocaleString()}</td>
                       <td className="px-6 py-4 text-right">
@@ -299,12 +340,13 @@ export default function HrPayrollPage() {
       {activeTab === 'COMPENSATION' && (
         <div className="bg-white border border-gray-100 rounded-b-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#160f29] min-w-[900px]">
+            <table className="w-full text-left text-sm text-[#160f29] min-w-[1000px]">
               <thead className="bg-[#160f29] text-xs uppercase tracking-widest text-[#fcfcff]">
                 <tr>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('name')}>
                     Employee <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/>
                   </th>
+                  <th className="px-6 py-5 font-black">Account Details</th>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('date')}>
                     Auto-Cron Counter <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/>
                   </th>
@@ -314,7 +356,7 @@ export default function HrPayrollPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {processedEmployees.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No employees found.</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No employees found.</td></tr>
                 ) : (
                   processedEmployees.map((emp: any) => {
                     const daysLeft = calculateDaysLeft(emp.nextPayDate);
@@ -322,6 +364,10 @@ export default function HrPayrollPage() {
                     return (
                       <tr key={emp.id} className="hover:bg-[#2a27fd]/5 transition-colors group">
                         <td className="px-6 py-5"><p className="font-black text-[#160f29] text-base group-hover:text-[#2a27fd] transition-colors">{emp.name}</p><p className="text-xs text-[#160f29]/60 font-bold mt-0.5">{emp.role}</p></td>
+                        <td className="px-6 py-5">
+                          <p className="font-bold text-[#160f29]">{emp.bankName || 'Not Provided'}</p>
+                          <p className="text-xs font-mono text-[#160f29]/60">{emp.salaryAccountNumber || 'N/A'}</p>
+                        </td>
                         <td className="px-6 py-5">
                           {daysLeft === null ? (
                             <span className="text-[#160f29]/40 font-bold italic text-xs">Unassigned</span>
@@ -337,7 +383,7 @@ export default function HrPayrollPage() {
                         <td className="px-6 py-5">
                           <div className="flex space-x-3">
                             <div className="relative flex-1">
-                              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#160f29]/40" />
+                              <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#160f29]/40" />
                               <input 
                                 type="number" 
                                 value={salaryInputs[emp.id] || ''}
@@ -378,11 +424,12 @@ export default function HrPayrollPage() {
       {activeTab === 'LEDGER' && (
         <div className="bg-white border border-gray-100 rounded-b-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#160f29] min-w-[800px]">
+            <table className="w-full text-left text-sm text-[#160f29] min-w-[950px]">
               <thead className="bg-[#160f29] text-xs uppercase tracking-widest text-[#fcfcff]">
                 <tr>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('date')}>Date Cleared <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/></th>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('name')}>Employee <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/></th>
+                  <th className="px-6 py-5 font-black">Account Details</th>
                   <th className="px-6 py-5 font-black">Pay Period</th>
                   <th className="px-6 py-5 cursor-pointer hover:bg-black transition-colors font-black" onClick={() => handleSort('amount')}>Net Disbursed <ArrowUpDown className="inline w-4 h-4 ml-1 text-[#ffbb00]"/></th>
                   <th className="px-6 py-5 text-right font-black">Status</th>
@@ -390,12 +437,16 @@ export default function HrPayrollPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {processedHistorical.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No historical data available.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-16 text-center text-[#160f29]/50 font-bold">No historical data available.</td></tr>
                 ) : (
                   processedHistorical.map((payroll: any) => (
                     <tr key={payroll.id} className="hover:bg-[#2a27fd]/5 transition-colors group">
                       <td className="px-6 py-5 font-bold text-[#160f29]/70">{new Date(payroll.createdAt).toLocaleString()}</td>
                       <td className="px-6 py-5"><p className="font-black text-[#160f29] text-base group-hover:text-[#2a27fd] transition-colors">{payroll.user.name}</p><p className="text-xs text-[#160f29]/60 font-bold mt-0.5">{payroll.user.role}</p></td>
+                      <td className="px-6 py-5">
+                        <p className="font-bold text-[#160f29]">{payroll.user.bankName || 'Not Provided'}</p>
+                        <p className="text-xs font-mono text-[#160f29]/60">{payroll.user.salaryAccountNumber || 'N/A'}</p>
+                      </td>
                       <td className="px-6 py-5 font-bold text-[#160f29]/80">{payroll.payPeriod}</td>
                       <td className="px-6 py-5 font-black text-[#2a27fd] text-base">₦{payroll.netPay.toLocaleString()}</td>
                       <td className="px-6 py-5 text-right">

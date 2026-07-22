@@ -7,6 +7,7 @@ import Sidebar from '@/components/sidebar';
 import Navbar from '@/components/navbar';
 import GlobalCommsWidget from '@/components/chat/GlobalCommsWidget';
 import { Menu } from 'lucide-react';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -73,6 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Persistent Global Comms */}
+      <NotificationBell />
       <GlobalCommsWidget />
     </div>
   );

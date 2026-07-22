@@ -12,20 +12,23 @@ export default function Sidebar() {
   const role = session?.user?.role;
 
   // Define route visibility based on the upgraded RBAC
+  // The '*' key grants universal access to all registered network personnel
   const navigation = [
-    { name: 'My Workspace', href: '/dashboard', icon: LayoutDashboard, roles: ['STAFF', 'HR', 'ADMIN', 'SUPER_ADMIN'] },
-    { name: 'Leave Portal', href: '/dashboard/leave', icon: Clock, roles: ['STAFF', 'HR', 'ADMIN', 'SUPER_ADMIN'] },
+    { name: 'My Workspace', href: '/dashboard', icon: LayoutDashboard, roles: ['*'] },
+    { name: 'Leave Portal', href: '/dashboard/leave', icon: Clock, roles: ['*'] },
     { name: 'Leave Approvals', href: '/hr/leaves', icon: Clock, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Personnel & HR', href: '/hr/employees', icon: Users, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Payroll Engine', href: '/hr/payroll', icon: FileText, roles: ['HR', 'ADMIN', 'SUPER_ADMIN'] },
     { name: 'Local Command', href: '/admin/branches', icon: Activity, roles: ['ADMIN', 'SUPER_ADMIN'] },
     { name: 'Global God Mode', href: '/admin/branches', icon: Globe, roles: ['SUPER_ADMIN'] },
-    { name: 'Comms Network', href: '/dashboard/chat', icon: MessageSquare, roles: ['STAFF', 'HR', 'ADMIN', 'SUPER_ADMIN'] },
-    { name: 'Audit Logs', href: '/admin/audit-logs', icon: ShieldAlert, roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Comms Network', href: '/dashboard/chat', icon: MessageSquare, roles: ['*'] },
+    { name: 'Audit Logs', href: '/admin/audit-logs', icon: ShieldAlert, roles: ['AUDIT', 'ADMIN', 'SUPER_ADMIN'] },
   ];
 
-  // Filter links the user is authorized to see
-  const authorizedLinks = navigation.filter(item => item.roles.includes(role || ''));
+  // Filter links the user is authorized to see (allows specific roles OR universal '*' roles)
+  const authorizedLinks = navigation.filter(item => 
+    item.roles.includes('*') || item.roles.includes(role || '')
+  );
 
   return (
     <div className="w-64 bg-slate-900 min-h-screen text-slate-300 flex flex-col border-r border-slate-800 shadow-xl z-20">
@@ -66,7 +69,7 @@ export default function Sidebar() {
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-black text-white truncate">{session?.user?.name || 'Authenticating...'}</p>
-            <p className="text-xs text-bank-gold font-bold truncate">{role || 'Establishing Link'}</p>
+            <p className="text-xs text-bank-gold font-bold truncate">{role?.replace('_', ' ') || 'Establishing Link'}</p>
           </div>
         </div>
         <button

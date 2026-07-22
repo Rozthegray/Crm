@@ -22,27 +22,40 @@ export async function getPayrollCommandData() {
     payrollWhere.user = { branchId };
   }
 
+  // Shared shape so every payroll row carries what the export needs:
+  // employee name, department (role), and payroll bank destination.
+  const payrollUserSelect = {
+    name: true,
+    role: true,
+    bankName: true,
+    salaryAccountNumber: true,
+  };
+
   try {
     // 1. Get employees for Compensation Management
     const employees = await db.user.findMany({
       where: userWhere,
-      select: { id: true, name: true, role: true, baseSalary: true, nextPayDate: true },
+      select: {
+        id: true, name: true, role: true, baseSalary: true, nextPayDate: true,
+        bankName: true, salaryAccountNumber: true,
+      },
       orderBy: { name: 'asc' }
     });
 
-    // 2. Get pending ledgers (Waiting for bulk disbursement)
+    // 2. Get pending ledgers (Waiting for bulk disbursement) — this is
+    // effectively "this month's payment run" for the export.
     const pendingPayrolls = await db.payroll.findMany({
       where: { ...payrollWhere, isPaid: false },
-      include: { user: { select: { name: true, role: true } } },
+      include: { user: { select: payrollUserSelect } },
       orderBy: { createdAt: 'desc' }
     });
 
-    // 3. Get historical ledgers
+    // 3. Get historical ledgers (all-time paid records for month-over-month tracking)
     const historicalPayrolls = await db.payroll.findMany({
       where: { ...payrollWhere, isPaid: true },
-      include: { user: { select: { name: true, role: true } } },
+      include: { user: { select: payrollUserSelect } },
       orderBy: { createdAt: 'desc' },
-      take: 50 // Limit for performance
+      take: 50 // Limit for performance — see note in export UI
     });
 
     // Calculate KPIs

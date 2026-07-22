@@ -1,110 +1,227 @@
 datasource db {
   provider = "postgresql"
+  // url is intentionally removed to comply with Prisma 7 config standards
 }
 
-// 2. CLIENT GENERATOR
 generator client {
   provider = "prisma-client-js"
 }
 
-// 3. ENUMS
+// ==========================================
+// CORE ENUMS
+// ==========================================
 enum Role {
-  SUPER_ADMIN   // Global God-mode
-  ADMIN         // Branch Manager
-  HR            // Branch HR
-  STAFF         // Standard Employee
+  SUPER_ADMIN
+  ADMIN
+  HR
+  STAFF
+  EXEC
+  IT_DIGITAL
+  FINANCE_TREASURY
+  LEGAL
+  OPERATIONS
+  COMPLIANCE
+  MARKETING_COMMUNICATION
+  CREDIT_RISK
+  AUDIT
+  RECOVERY
+  CUSTOMER_EXPERIENCE
+  SAVINGS_MOBILISATION
+  ENGINEERING
 }
 
-enum AccountStatus {
+enum AccountStatus { 
   PENDING_APPROVAL
   ACTIVE
   SUSPENDED
-  TERMINATED
+  TERMINATED 
 }
 
-// UPGRADED: Full State Machine for Phase 1 Leave Engine
-enum LeaveStatus {
+enum LeaveStatus { 
   PENDING
   APPROVED
   ACTIVE
   PAUSED
   COMPLETED
-  REJECTED
+  REJECTED 
 }
 
-enum LeaveType {
+enum LeaveType { 
   ANNUAL
   SICK
   PREGNANCY_MATERNITY
-  UNPAID
+  UNPAID 
 }
 
-enum Severity {
+enum Severity { 
   INFO
   WARNING
-  CRITICAL
+  CRITICAL 
 }
 
-enum KycStatus {
+enum KycStatus { 
   PENDING
   VERIFIED
   REJECTED
-  EXPIRED
+  EXPIRED 
 }
 
-enum AccountType {
+enum AccountType { 
   CHECKING
   SAVINGS
   LOAN
-  INVESTMENT
+  INVESTMENT 
 }
 
-// 4. CORE MODELS
+// PHASE 5 ENUMS
+enum Station { 
+  TELLER_COUNTER
+  VAULT_CUSTODIAN
+  CUSTOMER_SERVICE
+  BACK_OFFICE
+  SECURITY_DESK 
+}
 
+enum ShiftStatus { 
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  ABSENT 
+}
+
+// PHASE 6 ENUMS
+enum CertStatus { 
+  VALID
+  EXPIRING_SOON
+  EXPIRED
+  REVOKED 
+}
+
+enum OkrStatus { 
+  ON_TRACK
+  AT_RISK
+  BEHIND
+  COMPLETED 
+}
+
+// PHASE 7 ENUMS
+enum WorkflowType { 
+  EXPENSE_REQUISITION
+  DEPARTMENT_TRANSFER
+  SALARY_ADJUSTMENT
+  POLICY_EXCEPTION 
+}
+
+enum WorkflowStatus { 
+  DRAFT
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  CANCELLED 
+}
+
+enum StepStatus { 
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED 
+}
+
+// PHASE 8 ENUMS
+enum AssetStatus {
+  ASSIGNED
+  IN_REPAIR
+  RETURNED
+  LOST_STOLEN
+}
+
+// PHASE 9: RESOURCES & REQUISITION ENUMS
+enum PolicyCategory {
+  HR_GUIDELINES
+  IT_SECURITY
+  COMPLIANCE_AML
+  BRANCH_OPERATIONS
+  GENERAL
+}
+
+enum AssetRequestStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  REJECTED
+}
+
+// ==========================================
+// CORE MODELS
+// ==========================================
 model Branch {
   id          String   @id @default(cuid())
-  name        String   @unique // e.g., "Lagos Mainland HQ"
+  name        String   @unique
   location    String
   established DateTime @default(now())
+  
   users       User[]
+  shifts      Shift[]
+  assets      HardwareAsset[]
 }
 
 model User {
-  id               String         @id @default(cuid())
-  email            String         @unique
-  password         String         // Employees now set this themselves
-  name             String
-  role             Role           @default(STAFF)
-  status           AccountStatus  @default(PENDING_APPROVAL) // Locked by default
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  password            String         
+  name                String
+  role                Role           @default(STAFF)
+  status              AccountStatus  @default(PENDING_APPROVAL)
+  isDepartmentLead    Boolean        @default(false)
   
-  // KYC & Compliance
-  phone            String?
-  birthDate        DateTime?
-  nin              String?        @unique // National Identity Number
-  bvn              String?        @unique // Bank Verification Number
-  address          String?
-  avatarUrl        String?        // Profile Picture
-  cvUrl            String?        // Resume/CV Upload
+  phone               String?
+  birthDate           DateTime?
+  nin                 String?        @unique
+  bvn                 String?        @unique
+  address             String?
+  avatarUrl           String?        
+  cvUrl               String?        
   
-  // Multi-Branch Architecture
-  branchId         String?
-  branch           Branch?        @relation(fields: [branchId], references: [id])
+  branchId            String?
+  branch              Branch?        @relation(fields: [branchId], references: [id])
+  salaryAccountNumber String?
+  bankName            String?
+  nextPayDate         DateTime?      
+  baseSalary          Float?
+  isOnline            Boolean        @default(false)
   
-  // Phase 2 & 3 Groundwork (Payroll & Sockets)
-  nextPayDate      DateTime?      // 30-Day Rolling Epoch
-  baseSalary       Float?
-  isOnline         Boolean        @default(false)
-  
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
   
   // Relations
-  payrolls         Payroll[]
-  leaveRequests    LeaveRequest[]
-  auditLogs        AuditLog[]
-  managedCustomers Customer[]
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  payrolls            Payroll[]
+  leaveRequests       LeaveRequest[]
+  auditLogs           AuditLog[]
+  managedCustomers    Customer[]
+  sentMessages        Message[]      @relation("SentMessages")
+  receivedMessages    Message[]      @relation("ReceivedMessages")
+  notifications       Notification[]
+  
+  shifts              Shift[]
+  delegationsGiven    Delegation[]   @relation("Delegator")
+  delegationsReceived Delegation[]   @relation("Delegatee")
+  
+  certifications      Certification[]
+  objectives          Objective[]
+
+  initiatedWorkflows  WorkflowRequest[] @relation("InitiatedWorkflows")
+  assignedSteps       WorkflowStep[]    @relation("AssignedSteps")
+  actedSteps          WorkflowStep[]    @relation("ActedSteps")
+
+  // Phase 8 Relations
+  assets                HardwareAsset[]     @relation("AssignedAssets")
+  offboardingRecord     OffboardingRecord?
+  processedOffboardings OffboardingRecord[] @relation("ProcessedOffboardings")
+
+  // Phase 9 Relations
+  authoredPolicies      CompanyPolicy[] @relation("PolicyAuthor")
+  assetRequests         AssetRequest[]  @relation("AssetRequester")
+  approvedAssetRequests AssetRequest[]  @relation("AssetApprover")
 }
 
 model Payroll {
@@ -120,29 +237,24 @@ model Payroll {
   createdAt   DateTime @default(now())
 }
 
-// UPGRADED: Phase 1 Hierarchical Leave Engine
 model LeaveRequest {
   id            String      @id @default(cuid())
   userId        String
   user          User        @relation(fields: [userId], references: [id])
   type          LeaveType   @default(ANNUAL)
-  
-  // Time Tracker Engine
   startDate     DateTime
   endDate       DateTime
   totalDays     Int
   daysRemaining Int
-  pausedAt      DateTime?   // Timestamp for early returns
-  
+  pausedAt      DateTime?   
   reason        String?
   status        LeaveStatus @default(PENDING)
-  approverId    String?     // The ID of the HR/Admin/SuperAdmin who authorized it
-  
+  approverId    String?     
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
   @@index([userId, createdAt])
-  @@index([status]) // Crucial for the Midnight Cron Job to quickly find ACTIVE leaves
+  @@index([status]) 
 }
 
 model AuditLog {
@@ -173,10 +285,8 @@ model Customer {
   taxId             String?       @unique 
   address           String
   kycStatus         KycStatus     @default(PENDING)
-  
   assignedManagerId String?       
   assignedManager   User?         @relation(fields: [assignedManagerId], references: [id])
-  
   accounts          Account[]
   documents         KycDocument[]
   createdAt         DateTime      @default(now())
@@ -201,24 +311,232 @@ model Account {
 }
 
 model KycDocument {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   customerId   String
-  customer     Customer @relation(fields: [customerId], references: [id])
+  customer     Customer  @relation(fields: [customerId], references: [id])
   documentType String   
   fileUrl      String   
-  uploadedAt   DateTime @default(now())
+  uploadedAt   DateTime  @default(now())
   verifiedAt   DateTime?
   verifiedBy   String?  
 }
 
 model Message {
   id         String   @id @default(cuid())
-  content    String
-  createdAt  DateTime @default(now())
-
+  content    String?  
+  imageUrl   String?  // Store S3/UploadThing URL here
+  isDeleted  Boolean  @default(false)
+  
   senderId   String
-  receiverId String
-
+  receiverId String?  // Optional for global admin broadcasts
+  
   sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiver   User?    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   @default("SYSTEM")
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model Shift {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  date        DateTime    
+  startTime   DateTime    
+  endTime     DateTime    
+  station     Station     @default(BACK_OFFICE)
+  status      ShiftStatus @default(SCHEDULED)
+  notes       String?     
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([branchId, date]) 
+  @@index([userId, date])
+}
+
+model Delegation {
+  id              String   @id @default(cuid())
+  delegatorId     String
+  delegator       User     @relation("Delegator", fields: [delegatorId], references: [id])
+  delegateeId     String
+  delegatee       User     @relation("Delegatee", fields: [delegateeId], references: [id])
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean  @default(true)
+  departmentRole  Role     
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([delegatorId])
+  @@index([delegateeId])
+  @@index([isActive])
+}
+
+model Certification {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String     
+  issuer          String     
+  issuedAt        DateTime
+  expiresAt       DateTime
+  status          CertStatus @default(VALID)
+  documentUrl     String?    
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([expiresAt])
+  @@index([status])
+}
+
+model Objective {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String    
+  description     String?
+  targetValue     Float     
+  currentValue    Float     @default(0)
+  metric          String    
+  deadline        DateTime
+  status          OkrStatus @default(ON_TRACK)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, status])
+}
+
+model WorkflowRequest {
+  id               String         @id @default(cuid())
+  initiatorId      String
+  initiator        User           @relation("InitiatedWorkflows", fields: [initiatorId], references: [id], onDelete: Cascade)
+  type             WorkflowType
+  title            String
+  details          Json           
+  status           WorkflowStatus @default(IN_PROGRESS)
+  currentStepIndex Int            @default(0) 
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  steps            WorkflowStep[]
+
+  @@index([initiatorId])
+  @@index([status])
+}
+
+model WorkflowStep {
+  id              String          @id @default(cuid())
+  workflowId      String
+  workflow        WorkflowRequest @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepOrder       Int             
+  requiredRoleId  Role?           
+  specificUserId  String?
+  assignedUser    User?           @relation("AssignedSteps", fields: [specificUserId], references: [id])
+  status          StepStatus      @default(PENDING)
+  comments        String?         
+  actedById       String?
+  actor           User?           @relation("ActedSteps", fields: [actedById], references: [id])
+  actedAt         DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@unique([workflowId, stepOrder])
+}
+
+// ============================================================================
+// PHASE 8: ASSETS & OFFBOARDING ENGINE
+// ============================================================================
+model HardwareAsset {
+  id              String      @id @default(cuid())
+  tagNumber       String      @unique // e.g., "LT-2026-89"
+  deviceType      String      // e.g., "MacBook Pro", "Teller Scanner"
+  
+  assignedToId    String?
+  assignedTo      User?       @relation("AssignedAssets", fields: [assignedToId], references: [id])
+  
+  branchId        String
+  branch          Branch      @relation(fields: [branchId], references: [id])
+  
+  status          AssetStatus @default(ASSIGNED)
+  issuedAt        DateTime    @default(now())
+  returnedAt      DateTime?
+
+  @@index([assignedToId])
+  @@index([branchId])
+
+  // Phase 9 Link
+  fulfilledRequest AssetRequest?
+}
+
+model OffboardingRecord {
+  id              String      @id @default(cuid())
+  userId          String      @unique // One offboarding record per terminated user
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  processedById   String
+  processedBy     User        @relation("ProcessedOffboardings", fields: [processedById], references: [id])
+  
+  payrollFrozen   Boolean     @default(false)
+  accessRevoked   Boolean     @default(false)
+  assetsRecovered Boolean     @default(false)
+  
+  notes           String?
+  createdAt       DateTime    @default(now())
+}
+
+// ============================================================================
+// PHASE 9: INTERNAL KNOWLEDGE BASE
+// ============================================================================
+model CompanyPolicy {
+  id          String         @id @default(cuid())
+  title       String
+  content     String         @db.Text // Store Markdown or Rich Text HTML here
+  category    PolicyCategory @default(GENERAL)
+  isPublished Boolean        @default(true)
+  
+  authorId    String
+  author      User           @relation("PolicyAuthor", fields: [authorId], references: [id])
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@index([category, isPublished])
+}
+
+// ============================================================================
+// PHASE 9: ASSET REQUISITION TICKETS
+// ============================================================================
+model AssetRequest {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation("AssetRequester", fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceType      String             // e.g., "MacBook Pro", "Ergonomic Chair"
+  reason          String             // The business justification
+  status          AssetRequestStatus @default(PENDING)
+  
+  // Who approved it (HR/IT Lead)
+  approverId      String?
+  approver        User?              @relation("AssetApprover", fields: [approverId], references: [id])
+  
+  // Link to the actual hardware once IT fulfills the ticket
+  fulfilledWithId String?            @unique
+  fulfilledWith   HardwareAsset?     @relation(fields: [fulfilledWithId], references: [id])
+  
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([userId, status])
 }

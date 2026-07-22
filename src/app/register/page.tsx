@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Building2, ArrowRight, Upload, CheckCircle2, Loader2, Shield, User, AlertCircle } from 'lucide-react';
-import { submitEmployeeApplication } from '@/features/employee-management/register';
+import { Building2, ArrowRight, Upload, CheckCircle2, Loader2, Shield, User, AlertCircle, Banknote } from 'lucide-react';
+import { registerAndOnboardEmployee } from '@/features/employee-management/actions';
 
 export default function EmployeeRegistrationPage() {
   const [step, setStep] = useState(1);
@@ -22,6 +22,15 @@ export default function EmployeeRegistrationPage() {
     setUploadStatus('Encrypting & Uploading Documents...');
     
     const formData = new FormData(e.currentTarget);
+    
+    // Validate passwords match before pinging server
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -51,16 +60,20 @@ export default function EmployeeRegistrationPage() {
 
       if (cvFile && cvFile.size > 0) {
         const cvUrl = await uploadToCloudinary(cvFile);
-        formData.set('cvUrl', cvUrl);
+        // Swap out the raw file for the URL string so the Server Action can save it
+        formData.delete('cvDocument'); 
+        formData.set('cvDocument', cvUrl);
       }
       
       if (avatarFile && avatarFile.size > 0) {
         const avatarUrl = await uploadToCloudinary(avatarFile);
-        formData.set('avatarUrl', avatarUrl);
+         // Swap out the raw file for the URL string
+        formData.delete('avatarImage');
+        formData.set('idDocument', avatarUrl); // Action expects 'idDocument'
       }
 
       setUploadStatus('Transmitting to Headquarters...');
-      const result = await submitEmployeeApplication(formData);
+      const result = await registerAndOnboardEmployee(formData);
       
       if (result.success) {
         setSuccess(true);
@@ -84,7 +97,7 @@ export default function EmployeeRegistrationPage() {
           </div>
           <h2 className="text-3xl font-black text-[#160f29] mb-4 tracking-tight">Application Received</h2>
           <p className="text-[#160f29] mb-8 font-bold leading-relaxed">
-            Your registration has been securely transmitted. Your account is currently <strong className="text-[#160f29] bg-[#ffbb00] px-2 py-1 rounded">Pending Approval</strong> by the HR department at your selected branch.
+            Your registration has been securely transmitted. Your account is currently <strong className="text-[#160f29] bg-[#ffbb00] px-2 py-1 rounded">Pending Approval</strong> by the HR department. Please check your email for confirmation.
           </p>
           <Link href="/login" className="bg-[#160f29] text-white px-8 py-4 rounded-xl font-black hover:bg-black transition-all inline-block w-full shadow-lg">
             Return to Login Console
@@ -110,7 +123,7 @@ export default function EmployeeRegistrationPage() {
         
         {/* Progress Bar */}
         <div className="flex border-b border-gray-200 bg-gray-50">
-          {['Personal Details', 'Security & KYC', 'Placement & Docs'].map((label, index) => (
+          {['Personal Details', 'Security & Financials', 'Placement & Docs'].map((label, index) => (
             <div key={index} className={`flex-1 py-5 text-center text-[10px] sm:text-xs font-black uppercase tracking-widest border-b-4 transition-all ${step === index + 1 ? 'border-[#ffbb00] text-[#2a27fd] bg-white shadow-sm' : 'border-transparent text-gray-500'}`}>
               <span className="hidden sm:inline">Step {index + 1}:</span> {label}
             </div>
@@ -131,54 +144,56 @@ export default function EmployeeRegistrationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">First Name</label>
-                <input type="text" name="firstName" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="e.g. Chibuzor" />
+                <input type="text" name="firstName" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="e.g. Mac" />
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Last Name</label>
-                <input type="text" name="lastName" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="e.g. Osemene" />
+                <input type="text" name="lastName" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="e.g. Alistair" />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Date of Birth</label>
-                <input type="date" name="birthDate" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" />
+                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Email Address</label>
+                <input type="email" name="email" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="your.name@example.com" />
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Phone Number</label>
                 <input type="tel" name="phone" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="+234 (0) 800 000 0000" />
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Home Address</label>
-                <textarea name="address" required rows={2} className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 resize-none focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="Full residential address"></textarea>
-              </div>
             </div>
           </div>
 
-          {/* STEP 2: Security & KYC */}
+          {/* STEP 2: Security & Financials (INJECTED PHASE 1) */}
           <div className={`transition-all duration-300 ${step === 2 ? 'block animate-in slide-in-from-right-4' : 'hidden'}`}>
             <div className="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex items-start mb-8 shadow-sm">
               <Shield className="w-6 h-6 text-[#2a27fd] mr-4 flex-shrink-0" />
-              <p className="text-sm font-black text-[#160f29] leading-relaxed">For strict financial compliance, your National Identity Number (NIN) and Bank Verification Number (BVN) are required securely.</p>
+              <p className="text-sm font-black text-[#160f29] leading-relaxed">Establish your secure credentials and provide your payroll destination account.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Email Address</label>
-                <input type="email" name="email" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="your.name@example.com" />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mb-8">
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Create Password</label>
                 <input type="password" name="password" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="••••••••" />
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Confirm Password</label>
-                <input type="password" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="••••••••" />
+                <input type="password" name="confirmPassword" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gray-200 mb-8"></div>
+
+            <div className="flex items-center mb-6">
+               <Banknote className="w-5 h-5 text-[#ffbb00] mr-2" />
+               <h3 className="text-sm font-black uppercase tracking-widest text-[#160f29]">Payroll Destination Details</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Bank Name</label>
+                <input type="text" name="bankName" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="e.g. Zenith Bank" />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">NIN Number</label>
-                <input type="text" name="nin" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-mono font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="11-digit NIN" maxLength={11} />
-              </div>
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">BVN Number</label>
-                <input type="text" name="bvn" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-mono font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="11-digit BVN" maxLength={11} />
+                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Account Number</label>
+                <input type="text" name="salaryAccountNumber" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-mono font-black text-[#160f29] placeholder:text-gray-400 focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm" placeholder="10-digit Account Number" maxLength={10} />
               </div>
             </div>
           </div>
@@ -189,32 +204,36 @@ export default function EmployeeRegistrationPage() {
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Branch Selection</label>
                 <select name="branchId" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm">
-                  <option value="br_1">Lagos Mainland HQ</option>
-                  <option value="br_2">Victoria Island Branch</option>
-                  <option value="br_3">Abuja Central</option>
+           <option value="br_1">Lagos Mainland HQ</option>
+    <option value="br_2">Victoria Island Branch</option>
+    <option value="br_3">Abuja Central</option>
+    <option value="br_4">IKORODU</option>
+    <option value="br_5">KETU</option>
+    <option value="br_6">OYO</option>
+    <option value="br_7">ABA</option>
                 </select>
               </div>
               <div>
-  <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Requested Role / Department</label>
-  <select name="role" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm">
-    <option value="STAFF">Standard Employee (General)</option>
-    <option value="HR">Human Resources (HR)</option>
-    <option value="ADMIN">Branch Manager (Admin)</option>
-    <option value="EXEC">Executive (Execo)</option>
-    <option value="IT_DIGITAL">IT &amp; Digital</option>
-    <option value="FINANCE_TREASURY">Finance / Treasury</option>
-    <option value="LEGAL">Legal Department</option>
-    <option value="OPERATIONS">Operations</option>
-    <option value="COMPLIANCE">Compliance</option>
-    <option value="MARKETING_COMMUNICATION">Marketing &amp; Communication</option>
-    <option value="CREDIT_RISK">Credit Risk</option>
-    <option value="AUDIT">Internal Audit</option>
-    <option value="RECOVERY">Recovery Unit</option>
-    <option value="CUSTOMER_EXPERIENCE">Customer Experience</option>
-    <option value="SAVINGS_MOBILISATION">Savings Mobilisation</option>
-    <option value="ENGINEERING">Core Engineering</option>
-  </select>
-</div>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#160f29] mb-2">Requested Role / Department</label>
+                <select name="role" required className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-black text-[#160f29] focus:ring-2 focus:ring-[#2a27fd]/30 focus:border-[#2a27fd] transition-all shadow-sm">
+                  <option value="STAFF">Standard Employee (General)</option>
+                  <option value="HR">Human Resources (HR)</option>
+                  <option value="ADMIN">Branch Manager (Admin)</option>
+                  <option value="EXEC">Executive (Execo)</option>
+                  <option value="IT_DIGITAL">IT &amp; Digital</option>
+                  <option value="FINANCE_TREASURY">Finance / Treasury</option>
+                  <option value="LEGAL">Legal Department</option>
+                  <option value="OPERATIONS">Operations</option>
+                  <option value="COMPLIANCE">Compliance</option>
+                  <option value="MARKETING_COMMUNICATION">Marketing &amp; Communication</option>
+                  <option value="CREDIT_RISK">Credit Risk</option>
+                  <option value="AUDIT">Internal Audit</option>
+                  <option value="RECOVERY">Recovery Unit</option>
+                  <option value="CUSTOMER_EXPERIENCE">Customer Experience</option>
+                  <option value="SAVINGS_MOBILISATION">Savings Mobilisation</option>
+                  <option value="ENGINEERING">Core Engineering</option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-4">

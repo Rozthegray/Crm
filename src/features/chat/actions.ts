@@ -3,7 +3,6 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { sendMissedMessageEmail } from "@/lib/comms";
-// Import your new central Pusher hub here!
 import { pusherServer } from "@/lib/pusher";
 
 // --- 1. SYSTEM NOTIFICATIONS (Ephemeral) ---
@@ -105,10 +104,13 @@ export async function getChatHistory(contactId: string) {
   }
 }
 
-// --- 4. SEND & SAVE DIRECT MESSAGE ---
-export async function sendDirectMessage(receiverId: string, content: string) {
+// --- 4. SEND & SAVE DIRECT MESSAGE (Optimized for Images) ---
+export async function sendDirectMessage(receiverId: string, content?: string, imageUrl?: string) {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized" };
+
+  // Ensure at least text or an image is being sent
+  if (!content && !imageUrl) return { success: false, error: "Empty payloads are rejected." };
 
   try {
     // 1. Save to the immutable database ledger
@@ -116,20 +118,97 @@ export async function sendDirectMessage(receiverId: string, content: string) {
       data: {
         senderId: session.user.id,
         receiverId,
-        content
+        content: content || null,
+        imageUrl: imageUrl || null
       }
     });
 
-    // 2. Transmit instantly via WebSockets (attaching the senderId so it routes correctly)
+    // 2. Transmit instantly via WebSockets
     await pusherServer.trigger(`private-user-${receiverId}`, 'secure-message', {
+      id: savedMessage.id,
       message: content,
-      senderId: session.user.id, // CRITICAL: This tells the recipient who sent it
-      timestamp: savedMessage.createdAt
+      imageUrl: imageUrl,
+      senderId: session.user.id,
+      timestamp: savedMessage.createdAt,
+      isDeleted: false
     });
 
     return { success: true, message: savedMessage };
   } catch (error) {
     console.error("Send Error:", error);
     return { success: false, error: "Failed to send message." };
+  }
+}
+
+// --- 5. BROADCAST MESSAGE (Admin to All/Selected Roles) ---
+export async function broadcastMessage(content: string, targetRole?: string, imageUrl?: string) {
+  const session = await auth();
+  // Ensure only high-level clearances can broadcast
+  if (!session?.user || !['ADMIN', 'SUPER_ADMIN', 'HR'].includes(session.user.role)) {
+    return { success: false, error: "Security Exception: Insufficient clearance for broadcast." };
+  }
+
+  try {
+    // Save to DB (receiverId null = global broadcast)
+    const savedMessage = await db.message.create({ 
+      data: { 
+        content, 
+        imageUrl: imageUrl || null,
+        senderId: session.user.id 
+      } 
+    });
+    
+    // Broadcast to a global channel or a targeted role channel
+    const channelName = targetRole ? `role-channel-${targetRole}` : 'global-channel';
+    
+    await pusherServer.trigger(channelName, 'new-broadcast', {
+      id: savedMessage.id,
+      message: content,
+      imageUrl: imageUrl,
+      senderId: session.user.id,
+      timestamp: savedMessage.createdAt,
+      isDeleted: false,
+      isBroadcast: true
+    });
+
+    return { success: true, message: savedMessage };
+  } catch (error) {
+    console.error("Broadcast Error:", error);
+    return { success: false, error: "Failed to broadcast network message." };
+  }
+}
+
+// --- 6. DELETE MESSAGE (Soft Delete) ---
+export async function deleteMessage(messageId: string) {
+  const session = await auth();
+  if (!session || !session.user) return { success: false, error: "Unauthorized" };
+
+  try {
+    const msg = await db.message.findUnique({ where: { id: messageId } });
+    
+    if (!msg) return { success: false, error: "Message record not found." };
+
+    // Strict validation: Only the original sender or an Admin can scrub a message
+    const canDelete = msg.senderId === session.user.id || ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role);
+    if (!canDelete) return { success: false, error: "Security Exception: Unauthorized to alter this record." };
+
+    // Soft delete to maintain audit log integrity
+    await db.message.update({ 
+      where: { id: messageId }, 
+      data: { isDeleted: true } 
+    });
+
+    // Notify connected clients to instantly mask the UI
+    if (msg.receiverId) {
+      await pusherServer.trigger(`private-user-${msg.receiverId}`, 'message-deleted', { messageId });
+      await pusherServer.trigger(`private-user-${msg.senderId}`, 'message-deleted', { messageId });
+    } else {
+      await pusherServer.trigger('global-channel', 'message-deleted', { messageId });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Delete Error:", error);
+    return { success: false, error: "Failed to process message deletion protocol." };
   }
 }

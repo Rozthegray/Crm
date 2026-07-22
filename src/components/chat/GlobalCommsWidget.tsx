@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Pusher from 'pusher-js';
-import { MessageSquare, X, Send, BellRing } from 'lucide-react';
+import { MessageSquare, X, Send, BellRing, ImageIcon, Megaphone } from 'lucide-react';
 import { transmitSecureMessage } from '@/features/chat/actions';
 
 export default function GlobalCommsWidget() {
@@ -16,28 +16,39 @@ export default function GlobalCommsWidget() {
     if (!session?.user?.id) return;
 
     // 1. Initialize Client Socket
-  // 1. Initialize Client Socket
     const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-      authEndpoint: '/api/pusher/auth', // <-- Add this line!
+      authEndpoint: '/api/pusher/auth',
     });
     
-    // 2. Tune into the user's secure private channel
-    const channel = pusherClient.subscribe(`private-user-${session.user.id}`);
+    // 2. Tune into the user's secure private channel & global broadcast channel
+    const privateChannel = pusherClient.subscribe(`private-user-${session.user.id}`);
+    const globalChannel = pusherClient.subscribe('global-channel');
 
-    // 3. Listen for the specific 'incoming-message' event
-    channel.bind('incoming-message', (data: any) => {
+    const handleNewData = (data: any) => {
       setMessages((prev) => [...prev, data]);
       if (!isOpen) setUnread((prev) => prev + 1);
-    });
+    };
+
+    // 3. Listen for specific events
+    privateChannel.bind('incoming-message', handleNewData);
+    privateChannel.bind('secure-message', handleNewData);
+    globalChannel.bind('new-broadcast', handleNewData);
+
+    // 4. Handle real-time soft deletions
+    const handleDeletion = (data: { messageId: string }) => {
+      setMessages((prev) => prev.map(msg => msg.id === data.messageId ? { ...msg, isDeleted: true } : msg));
+    };
+    privateChannel.bind('message-deleted', handleDeletion);
+    globalChannel.bind('message-deleted', handleDeletion);
 
     return () => {
       pusherClient.unsubscribe(`private-user-${session.user.id}`);
+      pusherClient.unsubscribe('global-channel');
     };
   }, [session, isOpen]);
 
   const handleTestPing = async () => {
-    // For testing: Sending a message to YOURSELF to see the socket react instantly
     if (session?.user?.id) {
       await transmitSecureMessage(session.user.id, "Testing the Global Socket Network!");
     }
@@ -65,9 +76,23 @@ export default function GlobalCommsWidget() {
               <p className="text-xs text-center text-slate-400 font-bold mt-10">Channel is silent.</p>
             ) : (
               messages.map((msg, idx) => (
-                <div key={idx} className="bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
-                  <p className="text-xs font-black text-bank-blue mb-1">{msg.senderName}</p>
-                  <p className="text-sm font-medium text-slate-700">{msg.content}</p>
+                <div key={msg.id || idx} className={`p-3 rounded-xl shadow-sm ${msg.isDeleted ? 'bg-gray-100 border-gray-200 border' : 'bg-white border border-gray-100'}`}>
+                  <p className="text-xs font-black text-bank-blue mb-1 flex items-center">
+                    {msg.isBroadcast && <Megaphone className="w-3 h-3 mr-1 text-red-500" />}
+                    {msg.senderName || 'System Message'}
+                  </p>
+                  
+                  {msg.isDeleted ? (
+                    <p className="text-xs font-medium text-slate-400 italic">This message was removed.</p>
+                  ) : (
+                    <>
+                      {msg.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={msg.imageUrl} alt="Attachment" className="max-w-full rounded-lg mb-2 object-cover border border-gray-100" />
+                      )}
+                      {msg.content && <p className="text-sm font-medium text-slate-700">{msg.content}</p>}
+                    </>
+                  )}
                 </div>
               ))
             )}
