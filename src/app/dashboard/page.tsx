@@ -172,16 +172,16 @@ export default function StaffDashboardPage() {
     const fullName = `${editForm.firstName} ${editForm.lastName}`.trim();
 
     const res = await updateEmployeeProfile({
-      name: fullName,
-      phone: editForm.phone,
-      address: editForm.address,
-      nin: editForm.nin,
-      birthDate: editForm.birthDate,
-      avatarUrl: editForm.avatarUrl,
-      bankAccounts: bankAccounts
+        name: fullName,
+        phone: editForm.phone,
+        address: editForm.address,
+        nin: editForm.nin,
+        birthDate: editForm.birthDate,
+        avatarUrl: editForm.avatarUrl,
+        bankAccounts: bankAccounts
         .filter(acc => acc.bankName || acc.accountNumber || acc.accountName)
         .map(({ bankName, accountNumber, accountName }) => ({ bankName, accountNumber, accountName })),
-    });
+      } as any);
 
     if (res.success) {
       alert("Profile updated successfully!");
