@@ -5,10 +5,13 @@ import { auth } from "@/lib/auth";
 export async function GET(req: Request) {
   try {
     // 1. Authenticate & Authorize
+   // 1. Authenticate & Authorize
     const session = await auth();
-if (!session || !session.user || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
-    }
+    const user = session?.user as any; // The Override: Forces TS to accept custom fields
 
+    if (!session || !user || (user.role !== "HR" && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+    }
     // 2. Extract query parameters for search/filtering (Optional but recommended)
     const { searchParams } = new URL(req.url);
     const department = searchParams.get("department");
