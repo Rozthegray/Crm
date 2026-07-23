@@ -5,8 +5,11 @@ import { db } from "@/lib/db";
 export async function GET(request: Request) {
   try {
     // 1. Strict Security Perimeter
+  // 1. Strict Security Perimeter
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "SUPER_ADMIN")) {
+    const user = session?.user as any; // The Override: Forces TS to accept custom fields
+    
+    if (!session || !user || (user.role !== "HR" && user.role !== "SUPER_ADMIN")) {
       return new NextResponse("Unauthorized Access. HR Clearance Required.", { status: 403 });
     }
 

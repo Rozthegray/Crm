@@ -5,11 +5,13 @@ import { auth } from "@/lib/auth";
 // Fetch all leave requests (For HR Dashboard)
 export async function GET(req: Request) {
   try {
+   // 1. Strict Security Perimeter
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+    const user = session?.user as any; // The Override: Forces TS to accept custom fields
+    
+    if (!session || !user || (user.role !== "HR" && user.role !== "SUPER_ADMIN")) {
+      return new NextResponse("Unauthorized Access. HR Clearance Required.", { status: 403 });
     }
-
     const leaveRequests = await db.leaveRequest.findMany({
       include: {
         user: { select: { name: true, email: true, role: true } } // Join user details
