@@ -92,8 +92,10 @@ export default function CommsNetworkPage() {
       setActiveChatHistory(prev => prev.map(m => m.id === data.messageId ? { ...m, isDeleted: true } : m));
     });
 
-    return () => {
-      pusherClient.unsubscribe(`private-user-${session.user.id}`);
+   return () => {
+      if (session?.user?.id) {
+        pusherClient.unsubscribe(`private-user-${session.user.id}`);
+      }
     };
   }, [session]);
 
