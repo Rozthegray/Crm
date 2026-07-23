@@ -11,9 +11,9 @@ import {
   Users, Landmark, Plus, Trash2, FileDown, FileSpreadsheet, ChevronDown, Briefcase
 } from 'lucide-react';
 
-// Lazy load heavy UI components for maximum performance
-const PayrollTable = dynamic(() => Promise.resolve(PayrollLedger), { ssr: false });
-const ActivityFeed = dynamic(() => Promise.resolve(ActivityLog), { ssr: false });
+// Lazy load heavy UI components for maximum performance (Fixed Next.js module resolution)
+const PayrollTable = dynamic(() => Promise.resolve({ default: PayrollLedger }), { ssr: false });
+const ActivityFeed = dynamic(() => Promise.resolve({ default: ActivityLog }), { ssr: false });
 
 type BankAccount = {
   id: string;
@@ -214,7 +214,10 @@ export default function StaffDashboardPage() {
     if (!data) return;
     setIsExporting('csv');
     try {
-      const Papa = (await import('papaparse')).default;
+      // FIX: Destructure data inside the function scope to prevent ReferenceError
+      const { userData, payrolls, leaveData } = data;
+      
+      const Papa = (await import('papaparse') as any).default;
 
       const profileRows = [
         ['Field', 'Value'],
@@ -282,7 +285,10 @@ export default function StaffDashboardPage() {
     if (!data) return;
     setIsExporting('pdf');
     try {
-      const { jsPDF } = await import('jspdf');
+      // FIX: Destructure data inside the function scope to prevent ReferenceError
+      const { userData, payrolls, leaveData } = data;
+
+      const { jsPDF } = await import('jspdf') as any;
       const autoTableModule: any = await import('jspdf-autotable');
       const autoTable = autoTableModule.default;
 
@@ -443,12 +449,12 @@ export default function StaffDashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#2a27fd] to-[#ffbb00] rounded-full animate-spin-slow opacity-70 blur-sm"></div>
                 <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 bg-gradient-to-br from-[#2a27fd] to-[#1a18d0] shadow-[0_10px_30px_rgba(42,39,253,0.4)] z-10">
                   <div className="w-full h-full bg-[#160f29] rounded-full flex items-center justify-center overflow-hidden border-2 border-[#160f29]">
-                     {userData.avatarUrl ? (
-                       // eslint-disable-next-line @next/next/no-img-element
-                       <img src={userData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                     ) : (
-                       <User className="w-10 h-10 text-[#ffbb00]" />
-                     )}
+                      {userData.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={userData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-10 h-10 text-[#ffbb00]" />
+                      )}
                   </div>
                 </div>
                 {/* Active Status Dot */}
