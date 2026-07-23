@@ -215,8 +215,9 @@ export default function StaffDashboardPage() {
     setIsExporting('csv');
     try {
       // FIX: Destructure data inside the function scope to prevent ReferenceError
-      const { userData, payrolls, leaveData } = data;
+     const { userData, payrolls, leaveData } = data;
       
+      // @ts-ignore
       const Papa = (await import('papaparse') as any).default;
 
       const profileRows = [
