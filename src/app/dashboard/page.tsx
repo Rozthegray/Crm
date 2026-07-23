@@ -56,13 +56,13 @@ export default function StaffDashboardPage() {
         // Pre-fill the edit form with existing data (Safely handle missing names)
         const nameParts = res.userData?.name ? res.userData.name.split(' ') : ['', ''];
         setEditForm({
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          phone: res.userData?.phone || '',
-          address: res.userData?.address || '',
-          nin: res.userData?.nin || '',
-          birthDate: res.userData?.birthDate ? new Date(res.userData.birthDate).toISOString().split('T')[0] : '',
-          avatarUrl: res.userData?.avatarUrl || ''
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+            phone: (res.userData as any)?.phone || '',
+            address: (res.userData as any)?.address || '',
+            nin: (res.userData as any)?.nin || '',
+            birthDate: (res.userData as any)?.birthDate ? new Date((res.userData as any).birthDate).toISOString().split('T')[0] : '',
+            avatarUrl: (res.userData as any)?.avatarUrl || ''
         });
 
         // FIX: Pre-fill bank accounts with Type Override to silence TS errors
