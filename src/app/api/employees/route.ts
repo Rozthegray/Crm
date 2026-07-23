@@ -6,8 +6,7 @@ export async function GET(req: Request) {
   try {
     // 1. Authenticate & Authorize
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+if (!session || !session.user || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
     }
 
     // 2. Extract query parameters for search/filtering (Optional but recommended)
