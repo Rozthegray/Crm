@@ -34,8 +34,8 @@ export async function GET(request: Request) {
     // Using standard CSV headers that Finance software expects
     const headers = ["Employee ID", "Full Name", "Email", "Department", "Bank Name", "Account Number", "Base Salary (NGN)"];
     
-    const csvRows = employees.map(emp => {
-      return [
+const csvRows = employees.map((emp: any) => {
+        return [
         emp.id,
         `"${emp.name}"`, // Wrap in quotes to prevent comma breaks
         emp.email,
