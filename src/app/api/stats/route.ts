@@ -3,11 +3,14 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
 export async function GET(req: Request) {
-  try {
-    const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
-    }
+ try {
+      const session = await auth();
+      const user = session?.user as any; // Force TS to accept the custom user object
+
+      // Safely check that session, user, and the role all exist
+      if (!session || !user || user.role !== "ADMIN") {
+        return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+      }
 
     // Run aggregate queries concurrently for high performance
     const [totalUsers, pendingLeaves, totalPayroll] = await Promise.all([
