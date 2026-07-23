@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 export async function GET(request: Request) {
   try {
     // 1. Strict Security Perimeter
-  // 1. Strict Security Perimeter
     const session = await auth();
     const user = session?.user as any; // The Override: Forces TS to accept custom fields
     
@@ -13,6 +12,7 @@ export async function GET(request: Request) {
       return new NextResponse("Unauthorized Access. HR Clearance Required.", { status: 403 });
     }
 
+    // ... (the rest of your export logic continues here)
     // 2. Fetch Active Payroll Data
     const employees = await db.user.findMany({
       where: { 
