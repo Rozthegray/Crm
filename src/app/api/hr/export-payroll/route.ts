@@ -12,7 +12,6 @@ export async function GET(request: Request) {
       return new NextResponse("Unauthorized Access. HR Clearance Required.", { status: 403 });
     }
 
-    // ... (the rest of your export logic continues here)
     // 2. Fetch Active Payroll Data
     const employees = await db.user.findMany({
       where: { 
@@ -52,7 +51,7 @@ export async function GET(request: Request) {
     // 4. Record this highly sensitive action in the Immutable Audit Ledger
     await db.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         action: "PAYROLL_DATA_EXPORT",
         entityType: "SYSTEM",
         details: { count: employees.length, exportedAt: new Date().toISOString() },

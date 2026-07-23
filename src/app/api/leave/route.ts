@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
 // Fetch all leave requests (For HR Dashboard)
-// Fetch all leave requests (For HR Dashboard)
 export async function GET(req: Request) {
   try {
     // 1. Strict Security Perimeter
@@ -17,13 +16,13 @@ export async function GET(req: Request) {
     const leaveRequests = await db.leaveRequest.findMany({
       include: {
         user: { select: { name: true, email: true, role: true } } // Join user details
-      }
+      },
+      orderBy: { createdAt: "desc" }
     });
-    
-    // ... (the rest of your fetch logic continues here)
 
     return NextResponse.json({ success: true, data: leaveRequests });
   } catch (error) {
+    console.error("Leave fetch error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -32,7 +31,9 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const session = await auth();
-    if (!session || (session.user.role !== "HR" && session.user.role !== "ADMIN")) {
+    const user = session?.user as any; // Added override here to bypass Vercel TS checks
+    
+    if (!session || !user || (user.role !== "HR" && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -47,13 +48,10 @@ export async function PATCH(req: Request) {
       where: { id: leaveId },
       data: {
         status: status,
-        reviewedBy: session.user.id,
+        reviewedBy: user.id,
       },
       include: { user: true }
     });
-
-    // Optional: Trigger email notification to the user here
-    // await sendSystemNotification(updatedLeave.user.email, `Leave Request ${status}`, `Your leave request starting ${updatedLeave.startDate} has been ${status}.`);
 
     return NextResponse.json({ success: true, data: updatedLeave });
   } catch (error) {
