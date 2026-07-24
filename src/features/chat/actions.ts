@@ -48,7 +48,7 @@ export async function getChatDirectory() {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
-  const { role, branchId, id } = session.user;
+const { role, branchId, id } = session.user as any;
 
   try {
     // Basic rule: Don't show the user themselves in their own chat list
