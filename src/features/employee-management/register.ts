@@ -9,8 +9,9 @@ export async function submitEmployeeApplication(formData: FormData) {
   const email = formData.get('email') as string;
   const rawPassword = formData.get('password') as string;
   const branchId = formData.get('branchId') as string; 
-  const requestedRole = formData.get('role') as Role;
-  
+const requestedRole = formData.get('role') as string;
+
+
   // THE FIX: Extract the Cloudinary URLs from the frontend interceptor
   const cvUrl = formData.get('cvUrl') as string | null;
   const avatarUrl = formData.get('avatarUrl') as string | null;
