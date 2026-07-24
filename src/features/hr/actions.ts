@@ -92,9 +92,8 @@ const verifyHrClearance = async () => {
 export async function getBranchDirectory() {
   try {
     const user = await verifyHrClearance();
-    const isSuperAdmin = user.role === 'SUPER_ADMIN';
-    const targetBranchId = user.branchId;
-
+    const isSuperAdmin = (user as any).role === 'SUPER_ADMIN';
+    const targetBranchId = (user as any).branchId;  
     if (!isSuperAdmin && !targetBranchId) {
       return { 
         success: false, 
