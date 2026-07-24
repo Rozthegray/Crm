@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -33,7 +33,7 @@ export async function transmitSecureMessage(receiverId: string, content: string)
     });
 
     if (receiver && !receiver.isOnline) {
-await sendMissedMessageEmail(receiver.email, session?.user?.name || 'A team member', content);
+      await sendMissedMessageEmail(receiver.email, session?.user?.name || 'A team member', content);
     }
 
     return { success: true };
@@ -48,7 +48,7 @@ export async function getChatDirectory() {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
-const { role, branchId, id } = session.user as any;
+  const { role, branchId, id } = session.user as any;
 
   try {
     // Basic rule: Don't show the user themselves in their own chat list
@@ -143,9 +143,11 @@ export async function sendDirectMessage(receiverId: string, content?: string, im
 // --- 5. BROADCAST MESSAGE (Admin to All/Selected Roles) ---
 export async function broadcastMessage(content: string, targetRole?: string, imageUrl?: string) {
   const session = await auth();
+  if (!session || !session.user) return { success: false, error: "Unauthorized" };
+    
   // Ensure only high-level clearances can broadcast
-if (!['ADMIN', 'SUPER_ADMIN', 'HR'].includes((session.user as any).role)) {
-      return { success: false, error: "Security Exception: Insufficient clearance for broadcast." };
+  if (!['ADMIN', 'SUPER_ADMIN', 'HR'].includes((session?.user as any)?.role)) {
+    return { success: false, error: "Security Exception: Insufficient clearance for broadcast." };
   }
 
   try {
@@ -189,7 +191,7 @@ export async function deleteMessage(messageId: string) {
     if (!msg) return { success: false, error: "Message record not found." };
 
     // Strict validation: Only the original sender or an Admin can scrub a message
-    const canDelete = msg.senderId === session.user.id || ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role);
+    const canDelete = msg.senderId === session.user.id || ['ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role);
     if (!canDelete) return { success: false, error: "Security Exception: Unauthorized to alter this record." };
 
     // Soft delete to maintain audit log integrity
