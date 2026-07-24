@@ -27,10 +27,10 @@ export async function requestAsset(deviceType: string, reason: string) {
     });
     
     if (itStaff.length > 0) {
-      await db.notification.createMany({
-        data: itStaff.map(it => ({
-          userId: it.id,
-          title: "New Asset Requisition",
+        await db.notification.createMany({
+          data: itStaff.map((it: any) => ({
+            userId: it.id,
+            title: "New Asset Requisition",
           message: `${session.user.name} has requested a ${deviceType}.`,
           type: "SYSTEM"
         }))
