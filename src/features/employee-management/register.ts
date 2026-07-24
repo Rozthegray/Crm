@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
-import { Role } from "@prisma/client";
 
 export async function submitEmployeeApplication(formData: FormData) {
   // Public route: No session check required here
