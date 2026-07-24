@@ -6,8 +6,8 @@ import { auth } from "@/lib/auth";
 export async function getDepartmentTeam() {
   try {
     const session = await auth();
-    if (!session || !session.user || !session.user.branchId) {
-      return { success: false, error: "Unauthorized or unassigned to a branch." };
+if (!session || !session.user || !(session.user as any).branchId) {
+        return { success: false, error: "Unauthorized or unassigned to a branch." };
     }
 
     const team = await db.user.findMany({
