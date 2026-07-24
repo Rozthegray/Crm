@@ -14,8 +14,8 @@ if (!session || !['HR', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
   // 1. Fetch the user to ensure HR isn't approving someone from another branch
   const targetUser = await db.user.findUnique({ where: { id: userIdToApprove } });
   
-  if (session.user.role === 'HR' && targetUser?.branchId !== session.user.branchId) {
-    throw new Error("You can only approve employees in your own branch.");
+if ((session?.user as any)?.role === 'HR' && targetUser?.branchId !== (session?.user as any)?.branchId) {
+      throw new Error("You can only approve employees in your own branch.");
   }
 
   // 2. Make the account LIVE
