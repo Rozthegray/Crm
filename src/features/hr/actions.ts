@@ -149,8 +149,8 @@ export async function approveEmployeeAccount(employeeId: string, baseSalaryAmoun
     const targetEmployee = await db.user.findUnique({ where: { id: employeeId } });
     
     // Cross-branch manipulation block (Admins bypass this too if they don't have a branchId restriction)
-    if (adminUser.role === 'HR' && targetEmployee?.branchId !== adminUser.branchId) {
-      return { success: false, error: "Cross-branch manipulation strictly prohibited." };
+if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
+        return { success: false, error: "Cross-branch manipulation strictly prohibited." };
     }
 
     // Set the 30-Day Rolling Epoch
