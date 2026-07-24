@@ -54,8 +54,8 @@ export async function processAssetRequest(
 ) {
   try {
     const session = await auth();
-    if (!session || !['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN', 'HR'].includes(session.user.role)) {
-      return { success: false, error: "Security Exception: Insufficient clearance to process assets." };
+   if (!['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN', 'HR'].includes((session?.user as any)?.role)) {
+      return { error: "Security Exception: Insufficient clearance to process assets." };
     }
 
     const request = await db.assetRequest.findUnique({ where: { id: requestId } });
