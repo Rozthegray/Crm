@@ -231,8 +231,8 @@ export async function getEmployeeById(userId: string) {
       return { success: false, error: "Employee record not found in the database." };
     }
 
-    if (sessionUser.role !== 'SUPER_ADMIN' && employee.branchId !== sessionUser.branchId) {
-       return { success: false, error: "Clearance Denied: This personnel belongs to a different regional branch." };
+    if ((sessionUser as any).role !== 'SUPER_ADMIN' && employee.branchId !== (sessionUser as any).branchId) {
+         return { success: false, error: "Clearance Denied: This personnel belongs to a different regional branch." };
     }
 
     return { success: true, employee };
