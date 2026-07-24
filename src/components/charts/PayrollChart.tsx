@@ -22,7 +22,7 @@ export default function PayrollChart() {
           <Tooltip 
             cursor={{ fill: '#f8fafc' }}
             contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-            formatter={(value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
+            formatter={(value: any) => new Intl.NumberFormat('en-US', { /* ... */ style: 'currency', currency: 'USD' }).format(value)}
           />
           <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '14px' }} />
           <Bar dataKey="base" name="Base Salary" stackId="a" fill="#0A2540" radius={[0, 0, 4, 4]} />
