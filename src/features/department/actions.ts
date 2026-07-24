@@ -12,7 +12,7 @@ if (!session || !session.user || !(session.user as any).branchId) {
 
     const team = await db.user.findMany({
       where: { 
-        branchId: session.user.branchId,
+branchId: (session.user as any).branchId,
         status: "ACTIVE" 
       },
       select: { 
