@@ -105,7 +105,7 @@ export async function processAssetRequest(
           where: { id: requestId },
           data: { 
             status: "FULFILLED", 
-            approverId: session.user.id, 
+            approverId: session?.user?.id,
             fulfilledWithId: hardwareAssetId 
           }
         });
