@@ -72,9 +72,10 @@ export function RequisitionPanel({ currentUser }: { currentUser: any }) {
           setFulfillingId(null);
         setHardwareIdInput('');
         loadData();
-      } else {
-        alert(res.error);
-      }
+    } else {
+          alert(res?.error || "Failed to process request. Please try again.");
+        }
+     
       setIsSubmitting(false);
     }
   };
