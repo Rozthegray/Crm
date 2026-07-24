@@ -40,9 +40,10 @@ export async function getEmployeeDashboardData() {
     });
 
     const usedAnnualDays = leaves
-      .filter(l => l.type === 'ANNUAL' && (l.status === 'APPROVED' || l.status === 'COMPLETED'))
-      .reduce((acc, curr) => acc + curr.totalDays, 0);
+        .filter((l: any) => l.type === 'ANNUAL' && (l.status === 'APPROVED' || l.status === 'COMPLETED'))
+        .reduce((acc: any, curr: any) => acc + curr.totalDays, 0);
 
+        
     const remainingAnnualLeave = Math.max(0, 14 - usedAnnualDays);
     const recentLeaves = leaves.slice(0, 3); // Grab latest 3 for the mini-widget
 
