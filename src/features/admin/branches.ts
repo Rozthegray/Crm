@@ -44,10 +44,12 @@ export async function getGlobalDashboardData() {
     let activeManagers = 0;
 
     // 3. Format branch data and calculate metrics
-    const branchData = branches.map(b => {
+// 3. Format branch data and calculate metrics
+    const branchData = branches.map((b: any) => {
       // Only count active staff towards the branch headcount
-      const staff = b.users.filter(u => u.status === 'ACTIVE');
-      const manager = staff.find(u => u.role === 'ADMIN');
+      const staff = b.users.filter((u: any) => u.status === 'ACTIVE');
+      const manager = staff.find((u: any) => u.role === 'ADMIN');
+
       
       totalStaff += staff.length;
       if (manager) activeManagers++;
