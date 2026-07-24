@@ -43,8 +43,8 @@ export default function GlobalCommsWidget() {
     globalChannel.bind('message-deleted', handleDeletion);
 
     return () => {
-      pusherClient.unsubscribe(`private-user-${session.user.id}`);
-      pusherClient.unsubscribe('global-channel');
+    pusherClient.unsubscribe(`private-user-${session?.user?.id}`);
+    pusherClient.unsubscribe('global-channel');
     };
   }, [session, isOpen]);
 
