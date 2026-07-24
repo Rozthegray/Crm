@@ -196,8 +196,8 @@ export async function rejectEmployeeAccount(employeeId: string) {
 
     const targetEmployee = await db.user.findUnique({ where: { id: employeeId } });
     
-    if (adminUser.role === 'HR' && targetEmployee?.branchId !== adminUser.branchId) {
-      return { success: false, error: "Cross-branch manipulation strictly prohibited." };
+if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
+        return { success: false, error: "Cross-branch manipulation strictly prohibited." };
     }
 
     const updatedEmployee = await db.user.update({
