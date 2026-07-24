@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 // Ensure only SUPER_ADMIN can execute these actions
 const verifySuperAdmin = async () => {
   const session = await auth();
-  if (!session || session.user.role !== 'SUPER_ADMIN') {
+  if (!session?.user || (session.user as any).role !== 'SUPER_ADMIN') {
     throw new Error("Unauthorized: Super Admin clearance required.");
   }
 };
