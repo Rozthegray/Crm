@@ -56,8 +56,8 @@ export async function publishPolicy(title: string, content: string, category: st
     const allStaff = await db.user.findMany({ where: { status: "ACTIVE" }, select: { id: true } });
     
     // Batch create notifications for efficiency
-    const notifications = allStaff.map((staff: any) => ({
-        userId: staff.id,
+const notifications = allStaff.map((staff: any) => ({
+          userId: staff.id,
       title: "New Corporate Policy Published",
       message: `A new policy document "${title}" has been added to the Knowledge Base under ${category.replace('_', ' ')}.`,
       type: "SYSTEM"
