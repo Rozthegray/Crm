@@ -47,7 +47,7 @@ export async function publishPolicy(title: string, content: string, category: st
         title,
         content,
         category: category as any,
-        authorId: session.user.id,
+        authorId: (session?.user as any)?.id,
         isPublished: true
       }
     });
