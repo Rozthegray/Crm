@@ -54,8 +54,7 @@ const verifyHrClearance = async () => {
     throw new Error("Unauthorized access.");
   }
 
-const { role, id } = session.user as any;
-
+  const { role, id } = session.user as any;
 
 
   // 🔴 THE SHOWCASE OVERRIDE: Admins & Super Admins bypass ALL delegation locks automatically!
