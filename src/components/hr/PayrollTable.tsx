@@ -71,9 +71,11 @@ export default function PayrollTable({ pendingPayrolls, historicalPayrolls }: Pa
       return;
     }
     setIsExporting(key);
-    try {
-      const Papa = (await import('papaparse')).default;
+      try {
+        // @ts-ignore
+      const Papa = (await import('papaparse') as any).default;
       const csv = Papa.unparse(toExportRows(records));
+      
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
