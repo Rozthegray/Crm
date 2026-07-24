@@ -90,8 +90,8 @@ export async function processAssetRequest(
         return { success: false, error: "A specific Hardware Asset ID must be mapped to fulfill this request." };
       }
 
-      const result = await db.$transaction(async (prisma) => {
-        // 1. Assign the hardware to the employee in the inventory ledger
+    const result = await db.$transaction(async (prisma: any) => {
+          // 1. Assign the hardware to the employee in the inventory ledger
         await prisma.hardwareAsset.update({
           where: { id: hardwareAssetId },
           data: { 
