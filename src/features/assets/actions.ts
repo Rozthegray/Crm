@@ -54,8 +54,13 @@ export async function processAssetRequest(
 ) {
   try {
     const session = await auth();
-   if (!['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN', 'HR'].includes((session?.user as any)?.role)) {
-      return { error: "Security Exception: Insufficient clearance to process assets." };
+    
+    // HARD GUARD: Tells TS session.user is guaranteed below this line
+    if (!session || !session.user) return { success: false, error: "Unauthorized access." };
+
+    // Role verification using Type Override
+    if (!['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN', 'HR'].includes((session.user as any).role)) {
+      return { success: false, error: "Security Exception: Insufficient clearance to process assets." };
     }
 
     const request = await db.assetRequest.findUnique({ where: { id: requestId } });
@@ -133,7 +138,9 @@ export async function processAssetRequest(
 export async function getPendingAssetRequests() {
   try {
     const session = await auth();
-    if (!session || !['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    
+    // HARD GUARD + NextAuth Type Override
+    if (!session || !session.user || !['IT_DIGITAL', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
       return { success: false, error: "Unauthorized" };
     }
 
