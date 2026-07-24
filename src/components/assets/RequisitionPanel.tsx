@@ -68,8 +68,8 @@ export function RequisitionPanel({ currentUser }: { currentUser: any }) {
       }
       setIsSubmitting(true);
       const res = await processAssetRequest(requestId, action, hardwareIdInput);
-      if (res.success) {
-        setFulfillingId(null);
+      if (res?.success) {
+          setFulfillingId(null);
         setHardwareIdInput('');
         loadData();
       } else {
