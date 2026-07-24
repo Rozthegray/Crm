@@ -149,7 +149,8 @@ export async function getCompanyLeaveLedger() {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
-  const { role, branchId } = session.user;
+const { role, branchId } = session.user as any;
+
 
   // Hierarchical Routing
   let targetRoles: string[] = [];
