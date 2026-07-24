@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET, // <--- ADD THIS LINE
+  secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" }, 
   pages: {
     signIn: "/login",
@@ -46,15 +46,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
              throw new Error("Invalid email or password.");
           }
 
+          // Return custom user object
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role, 
             branchId: user.branchId, 
-          };
+          } as any; // Type override for the return object
         } catch (error: any) {
-          // This will pass the EXACT error message to your frontend instead of "Configuration"
           console.error("Auth Error:", error.message);
           throw new Error(error.message);
         }
@@ -63,18 +63,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // If user logs in, append custom fields to the token
       if (user) {
-        token.role = user.role;
-        token.id = user.id;
-        token.branchId = user.branchId; 
+        const customUser = user as any; // Force TS bypass
+        token.role = customUser.role;
+        token.id = customUser.id;
+        token.branchId = customUser.branchId; 
       }
       return token;
     },
     async session({ session, token }) {
+      // Pass token fields to the active session
       if (session.user) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
-        session.user.branchId = token.branchId as string;
+        const customSessionUser = session.user as any; // Force TS bypass
+        customSessionUser.role = token.role;
+        customSessionUser.id = token.id;
+        customSessionUser.branchId = token.branchId;
       }
       return session;
     }
