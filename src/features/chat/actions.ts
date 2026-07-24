@@ -144,8 +144,8 @@ export async function sendDirectMessage(receiverId: string, content?: string, im
 export async function broadcastMessage(content: string, targetRole?: string, imageUrl?: string) {
   const session = await auth();
   // Ensure only high-level clearances can broadcast
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN', 'HR'].includes(session.user.role)) {
-    return { success: false, error: "Security Exception: Insufficient clearance for broadcast." };
+if (!['ADMIN', 'SUPER_ADMIN', 'HR'].includes((session.user as any).role)) {
+      return { success: false, error: "Security Exception: Insufficient clearance for broadcast." };
   }
 
   try {
