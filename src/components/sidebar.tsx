@@ -9,7 +9,8 @@ import { LayoutDashboard, Users, FileText, Calendar, Clock, LogOut, MessageSquar
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = session?.user?.role;
+const role = (session?.user as any)?.role;
+
 
   // Define route visibility based on the upgraded RBAC
   // The '*' key grants universal access to all registered network personnel
