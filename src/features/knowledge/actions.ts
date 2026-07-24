@@ -38,8 +38,8 @@ export async function publishPolicy(title: string, content: string, category: st
   try {
     const session = await auth();
     // Only HR, Compliance, and Admins can publish corporate policies
-    if (!session || !['HR', 'COMPLIANCE', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return { success: false, error: "Security Exception: Insufficient clearance to publish policies." };
+  if (!['COMPLIANCE', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
+        return { success: false, error: "Security Exception: Insufficient clearance to publish policies." };
     }
 
     const newPolicy = await db.companyPolicy.create({
