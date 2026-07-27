@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -9,7 +9,8 @@ export async function getPayrollCommandData() {
   const session = await auth();
   if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
-  const { role, branchId } = session.user;
+  // 🔴 THE FIX: Apply the 'any' override to the destructuring
+  const { role, branchId } = session.user as any;
   if (!['HR', 'ADMIN', 'SUPER_ADMIN'].includes(role)) {
     return { success: false, error: "Insufficient clearance." };
   }

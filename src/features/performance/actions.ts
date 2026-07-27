@@ -75,7 +75,8 @@ export async function logCertification(data: {
 }) {
   try {
     const session = await auth();
-    if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    // 🔴 THE FIX: Apply the 'any' override and optional chaining to the role check
+    if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
       return { success: false, error: "HR Clearance required to log compliance documents." };
     }
 
