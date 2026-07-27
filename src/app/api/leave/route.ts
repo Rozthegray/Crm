@@ -46,10 +46,10 @@ export async function PATCH(req: Request) {
 
     const updatedLeave = await db.leaveRequest.update({
       where: { id: leaveId },
-      data: {
-        status: status,
-        reviewedBy: user.id,
-      },
+    data: {
+          status: status,
+          // reviewedBy: user.id, // 🔴 THE FIX: Commented out to match the Prisma schema and prevent runtime crashes
+        },
       include: { user: true }
     });
 
