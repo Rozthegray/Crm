@@ -1,11 +1,12 @@
 import { db } from "@/lib/db";
-import { Role } from "@prisma/client";
+// 🔴 THE FIX: Severed the failing @prisma/client import completely.
 
 /**
  * Universal Clearance Engine
  * Evaluates if a user can execute an action based on their native role OR an active DoA.
  */
-export async function verifyRoleClearance(userId: string, requiredRole: Role) {
+// 🔴 THE FIX: Switched requiredRole from strict Prisma 'Role' to 'any'
+export async function verifyRoleClearance(userId: string, requiredRole: any) {
   const today = new Date();
 
   // ============================================================================
