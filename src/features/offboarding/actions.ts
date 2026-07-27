@@ -21,8 +21,8 @@ if (session?.user?.id === targetUserId) {
     }
 
     // 3. Execute the Atomic Transaction
-    const result = await db.$transaction(async (prisma) => {
-      
+const result = await db.$transaction(async (prisma: any) => {
+        
       // A. Lock the Account instantly. 
       // (NextAuth session checks in middleware will bounce them on their next click)
       const terminatedUser = await prisma.user.update({
