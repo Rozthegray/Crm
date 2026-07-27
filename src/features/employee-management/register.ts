@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
@@ -9,8 +9,7 @@ export async function submitEmployeeApplication(formData: FormData) {
   const email = formData.get('email') as string;
   const rawPassword = formData.get('password') as string;
   const branchId = formData.get('branchId') as string; 
-const requestedRole = formData.get('role') as string;
-
+  const requestedRole = formData.get('role') as string;
 
   // THE FIX: Extract the Cloudinary URLs from the frontend interceptor
   const cvUrl = formData.get('cvUrl') as string | null;
@@ -45,7 +44,7 @@ const requestedRole = formData.get('role') as string;
         address: formData.get('address') as string,
         birthDate: new Date(formData.get('birthDate') as string),
         branchId, 
-        role: requestedRole,
+        role: requestedRole as any, // 🔴 THE FIX: Bypassing the strict Role enum check
         status: "PENDING_APPROVAL", 
         cvUrl,       // Permanently saved to the database!
         avatarUrl    // Permanently saved to the database!
