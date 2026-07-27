@@ -54,7 +54,7 @@ export default function CommsNetworkPage() {
       setIsLoadingChat(false);
     };
     loadHistory();
-  }, [activeContact, session?.user?.id]);
+  }, [activeContact, session && session.user ? session.user.id : null]);
 
   // 3. Initialize Real-Time Listener
   useEffect(() => {
