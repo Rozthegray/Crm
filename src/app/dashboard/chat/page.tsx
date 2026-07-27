@@ -8,6 +8,10 @@ import Pusher from 'pusher-js';
 
 export default function CommsNetworkPage() {
   const { data: session } = useSession();
+  
+  // 🔴 THE FIX: Extract the ID at the top level to completely blind the Turbopack parser bug
+  const currentUserId = session && session.user ? session.user.id : null;
+
   const [contacts, setContacts] = useState<any[]>([]);
   const [activeContact, setActiveContact] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,12 +45,13 @@ export default function CommsNetworkPage() {
       const res = await getChatHistory(activeContact.id);
       
       if (res.success) {
-       if (res.success) {
-          const formattedHistory = (res.messages || []).map((msg: any) => ({  
+        // 🔴 Fixed the duplicate if-statement syntax error here
+        const formattedHistory = (res.messages || []).map((msg: any) => ({  
+          id: msg.id,
           text: msg.content,
           imageUrl: msg.imageUrl,
           isDeleted: msg.isDeleted,
-          isMe: msg.senderId === session?.user?.id,
+          isMe: msg.senderId === currentUserId,
           time: new Date(msg.createdAt)
         }));
         setActiveChatHistory(formattedHistory);
@@ -54,18 +59,18 @@ export default function CommsNetworkPage() {
       setIsLoadingChat(false);
     };
     loadHistory();
-  }, [activeContact, session && session.user ? session.user.id : null]);
+  }, [activeContact, currentUserId]); // 🔴 THE FIX: Using the clean variable here
 
   // 3. Initialize Real-Time Listener
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!currentUserId) return;
 
     const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
       authEndpoint: '/api/pusher/auth',
     });
 
-    const channel = pusherClient.subscribe(`private-user-${session.user.id}`);
+    const channel = pusherClient.subscribe(`private-user-${currentUserId}`);
 
     // Listen for incoming messages
     channel.bind('secure-message', (data: any) => {
@@ -92,12 +97,12 @@ export default function CommsNetworkPage() {
       setActiveChatHistory(prev => prev.map(m => m.id === data.messageId ? { ...m, isDeleted: true } : m));
     });
 
-   return () => {
-      if (session?.user?.id) {
-        pusherClient.unsubscribe(`private-user-${session.user.id}`);
+    return () => {
+      if (currentUserId) {
+        pusherClient.unsubscribe(`private-user-${currentUserId}`);
       }
     };
-  }, [session]);
+  }, [currentUserId]); // 🔴 THE FIX: Clean variable used here too
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -109,7 +114,7 @@ export default function CommsNetworkPage() {
   // ============================================================================
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !activeContact || !session?.user?.id) return;
+    if (!message.trim() || !activeContact || !currentUserId) return;
 
     const textToSend = message;
     setMessage('');
