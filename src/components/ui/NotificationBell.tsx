@@ -15,8 +15,9 @@ export function NotificationBell() {
     const fetchAlerts = async () => {
       const res = await getUserNotifications();
       if (res.success) {
-        setNotifications(res.notifications);
-        setUnreadCount(res.unreadCount);
+        // 🔴 THE FIX: Fallbacks added to guarantee an array and a number
+        setNotifications(res.notifications || []);
+        setUnreadCount(res.unreadCount || 0);
       }
     };
     fetchAlerts();
