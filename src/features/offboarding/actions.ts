@@ -11,8 +11,8 @@ export async function terminateEmployee(targetUserId: string, notes: string = ""
     const session = await auth();
     
     // 1. Verify Authorization (Must be HR, ADMIN, or SUPER_ADMIN)
-    if (!['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-      return { success: false, error: "Unauthorized: Insufficient clearance for termination protocol." };
+     if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
+    return { success: false, error: "Unauthorized: Insufficient clearance for termination protocol." };
     }
 
     // 2. Prevent self-termination
