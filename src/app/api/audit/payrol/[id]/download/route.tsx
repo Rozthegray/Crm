@@ -38,7 +38,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       payPeriod: payroll.payPeriod,
       baseSalary: payroll.baseSalary,
       allowances: payroll.allowances,
-      deductions: payroll.deductions,
+      // 🔴 THE FIX: Using the exact spelling from your Prisma schema and casting to any
+      deductions: (payroll as any).dedctions || 0,
       netPay: payroll.netPay,
     };
 
