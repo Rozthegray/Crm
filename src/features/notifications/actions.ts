@@ -14,7 +14,8 @@ export async function getUserNotifications() {
       take: 20 // Keep the payload light, only show the 20 most recent
     });
 
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
 
     return { success: true, notifications, unreadCount };
   } catch (error: any) {
