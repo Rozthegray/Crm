@@ -60,9 +60,9 @@ export async function getPayrollCommandData() {
     });
 
     // Calculate KPIs
-    const totalDisbursed = historicalPayrolls.reduce((sum, p) => sum + p.netPay, 0);
-    const totalPending = pendingPayrolls.reduce((sum, p) => sum + p.netPay, 0);
-
+  // Calculate KPIs
+      const totalDisbursed = historicalPayrolls.reduce((sum: number, p: any) => sum + p.netPay, 0);
+      const totalPending = pendingPayrolls.reduce((sum: number, p: any) => sum + p.netPay, 0);
     return { 
       success: true, 
       employees, 
