@@ -40,21 +40,24 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     if (!id) return;
     setIsLoading(true);
     const res = await getEmployeeById(id);
-    if (res.success) {
-      setEmployee(res.employee);
+    
+    // 🔴 THE FIX: Added a strict check for res.employee and mapped it to an 'any' variable
+    if (res.success && res.employee) {
+      const emp = res.employee as any;
+      setEmployee(emp);
       
-      const nameParts = res.employee.name ? res.employee.name.split(' ') : ['', ''];
+      const nameParts = emp.name ? emp.name.split(' ') : ['', ''];
       
       setEditForm({
         firstName: nameParts[0] || '', 
         lastName: nameParts.slice(1).join(' ') || '',
-        phone: res.employee.phone || '', 
-        address: res.employee.address || '',
-        nin: res.employee.nin || '',
-        birthDate: res.employee.birthDate ? new Date(res.employee.birthDate).toISOString().split('T')[0] : '',
-        role: res.employee.role,
-        status: res.employee.status,
-        baseSalary: res.employee.baseSalary?.toString() || ''
+        phone: emp.phone || '', 
+        address: emp.address || '',
+        nin: emp.nin || '',
+        birthDate: emp.birthDate ? new Date(emp.birthDate).toISOString().split('T')[0] : '',
+        role: emp.role,
+        status: emp.status,
+        baseSalary: emp.baseSalary?.toString() || ''
       });
     } else {
       setErrorMsg(res.error || "Failed to load personnel data.");
@@ -83,7 +86,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   // --- ACTIONS ---
   const handleApprove = async () => {
     if (!confirm("Are you sure you want to approve this personnel for network access?")) return;
- setIsProcessing(true);
+    setIsProcessing(true);
       // @ts-ignore: Bypassing argument count mismatch for rapid deployment
       const res = await approveEmployeeAccount(id);
       if (res.success) {
