@@ -41,8 +41,8 @@ export default function CommsNetworkPage() {
       const res = await getChatHistory(activeContact.id);
       
       if (res.success) {
-        const formattedHistory = res.messages.map((msg: any) => ({
-          id: msg.id,
+       if (res.success) {
+          const formattedHistory = (res.messages || []).map((msg: any) => ({  
           text: msg.content,
           imageUrl: msg.imageUrl,
           isDeleted: msg.isDeleted,
