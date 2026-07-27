@@ -16,8 +16,8 @@ export async function terminateEmployee(targetUserId: string, notes: string = ""
     }
 
     // 2. Prevent self-termination
-    if (session.user.id === targetUserId) {
-      return { success: false, error: "Security Exception: You cannot initiate termination on your own account." };
+if (session?.user?.id === targetUserId) {
+        return { success: false, error: "Security Exception: You cannot initiate termination on your own account." };
     }
 
     // 3. Execute the Atomic Transaction
