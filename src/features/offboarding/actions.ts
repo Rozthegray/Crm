@@ -11,17 +11,17 @@ export async function terminateEmployee(targetUserId: string, notes: string = ""
     const session = await auth();
     
     // 1. Verify Authorization (Must be HR, ADMIN, or SUPER_ADMIN)
-     if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
-    return { success: false, error: "Unauthorized: Insufficient clearance for termination protocol." };
+    if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
+      return { success: false, error: "Unauthorized: Insufficient clearance for termination protocol." };
     }
 
     // 2. Prevent self-termination
-if (session?.user?.id === targetUserId) {
+    if ((session?.user as any)?.id === targetUserId) {
         return { success: false, error: "Security Exception: You cannot initiate termination on your own account." };
     }
 
     // 3. Execute the Atomic Transaction
-const result = await db.$transaction(async (prisma: any) => {
+    const result = await db.$transaction(async (prisma: any) => {
         
       // A. Lock the Account instantly. 
       // (NextAuth session checks in middleware will bounce them on their next click)
@@ -52,7 +52,7 @@ const result = await db.$transaction(async (prisma: any) => {
       const offboardingRecord = await prisma.offboardingRecord.create({
         data: {
           userId: targetUserId,
-          processedById: session.user.id,
+          processedById: (session?.user as any)?.id,
           payrollFrozen: true,
           accessRevoked: true,
           assetsRecovered: !hasAssets, // Marked false if they still hold company hardware
@@ -63,7 +63,7 @@ const result = await db.$transaction(async (prisma: any) => {
       // E. Write to the Immutable Audit Log for Compliance
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId: (session?.user as any)?.id,
           action: "EMPLOYEE_TERMINATED",
           entityType: "USER",
           entityId: targetUserId,
@@ -81,7 +81,7 @@ const result = await db.$transaction(async (prisma: any) => {
         });
         
         if (itStaff.length > 0) {
-          const notifications = itStaff.map(it => ({
+          const notifications = itStaff.map((it: any) => ({
             userId: it.id,
             title: "CRITICAL: Hardware Recovery Required",
             message: `Employee ${terminatedUser.name} was terminated. Please recover ${activeAssets.length} assigned asset(s) immediately.`,
@@ -108,7 +108,7 @@ const result = await db.$transaction(async (prisma: any) => {
 export async function getStaffForOffboarding() {
   try {
     const session = await auth();
-    if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    if (!session || !['HR', 'ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role)) {
       return { success: false, error: "Unauthorized" };
     }
 
