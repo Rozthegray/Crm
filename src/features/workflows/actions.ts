@@ -12,11 +12,12 @@ export async function createExpenseRequisition(title: string, amount: number, ve
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
     // Start a transactional write to ensure the request AND its steps are created together
-    const workflow = await db.$transaction(async (tx) => {
+    // 🔴 THE FIX: Explicitly typed tx as any
+    const workflow = await db.$transaction(async (tx: any) => {
       // Create the core request ledger
       const req = await tx.workflowRequest.create({
         data: {
-          initiatorId: session.user.id,
+          initiatorId: (session.user as any).id, // 🔴 THE FIX: Bypassed NextAuth user type
           type: "EXPENSE_REQUISITION",
           title,
           details: { amount, vendor, description },
@@ -73,7 +74,8 @@ export async function getMyPendingApprovals() {
     const session = await auth();
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
-    const { id, role } = session.user;
+    // 🔴 THE FIX: Added as any to destructuring
+    const { id, role } = session.user as any;
 
     // We only want workflows where the CURRENT step matches the user's ID or Role
     const pendingWorkflows = await db.workflowRequest.findMany({
@@ -114,7 +116,8 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
     const session = await auth();
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
-    const { id, role } = session.user;
+    // 🔴 THE FIX: Added as any to destructuring
+    const { id, role } = session.user as any;
 
     // Retrieve the workflow and all its steps
     const workflow = await db.workflowRequest.findUnique({
@@ -126,7 +129,7 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
       return { success: false, error: "Workflow is not active or already finalized." };
     }
 
-    const currentStep = workflow.steps.find(s => s.stepOrder === workflow.currentStepIndex);
+    const currentStep = workflow.steps.find((s: any) => s.stepOrder === workflow.currentStepIndex);
     if (!currentStep || currentStep.status !== "PENDING") {
       return { success: false, error: "Invalid step synchronization." };
     }
@@ -138,7 +141,8 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
     }
 
     // Process the transaction
-    await db.$transaction(async (tx) => {
+    // 🔴 THE FIX: Explicitly typed tx as any
+    await db.$transaction(async (tx: any) => {
       // 1. Mark the current step as resolved by this specific user
       await tx.workflowStep.update({
         where: { id: currentStep.id },
@@ -169,7 +173,7 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
       } 
       else if (decision === 'APPROVED') {
         const nextStepIndex = workflow.currentStepIndex + 1;
-        const hasMoreSteps = workflow.steps.some(s => s.stepOrder === nextStepIndex);
+        const hasMoreSteps = workflow.steps.some((s: any) => s.stepOrder === nextStepIndex);
 
         if (hasMoreSteps) {
           // Advance to the next department
