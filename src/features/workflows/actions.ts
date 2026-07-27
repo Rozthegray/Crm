@@ -12,12 +12,11 @@ export async function createExpenseRequisition(title: string, amount: number, ve
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
     // Start a transactional write to ensure the request AND its steps are created together
-    // 🔴 THE FIX: Explicitly typed tx as any
     const workflow = await db.$transaction(async (tx: any) => {
       // Create the core request ledger
       const req = await tx.workflowRequest.create({
         data: {
-          initiatorId: (session.user as any).id, // 🔴 THE FIX: Bypassed NextAuth user type
+          initiatorId: (session.user as any).id,
           type: "EXPENSE_REQUISITION",
           title,
           details: { amount, vendor, description },
@@ -32,7 +31,7 @@ export async function createExpenseRequisition(title: string, amount: number, ve
         data: {
           workflowId: req.id,
           stepOrder: 0,
-          requiredRoleId: "ADMIN", // Requires a Branch Admin to approve first
+          requiredRoleId: "ADMIN",
         }
       });
 
@@ -41,7 +40,7 @@ export async function createExpenseRequisition(title: string, amount: number, ve
         data: {
           workflowId: req.id,
           stepOrder: 1,
-          requiredRoleId: "FINANCE_TREASURY", // Requires Finance to release the funds
+          requiredRoleId: "FINANCE_TREASURY",
         }
       });
 
@@ -74,24 +73,12 @@ export async function getMyPendingApprovals() {
     const session = await auth();
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
-    // 🔴 THE FIX: Added as any to destructuring
     const { id, role } = session.user as any;
 
-    // We only want workflows where the CURRENT step matches the user's ID or Role
-    const pendingWorkflows = await db.workflowRequest.findMany({
+    // Fetch active workflows and filter in-memory to bypass complex cross-model field reference strict types
+    const activeWorkflows = await db.workflowRequest.findMany({
       where: {
-        status: "IN_PROGRESS",
-        steps: {
-          some: {
-            // It must be the currently active step
-            stepOrder: { equals: db.workflowRequest.fields.currentStepIndex },
-            status: "PENDING",
-            OR: [
-              { specificUserId: id },
-              { requiredRoleId: role as any }
-            ]
-          }
-        }
+        status: "IN_PROGRESS"
       },
       include: {
         initiator: { select: { name: true, role: true, avatarUrl: true } },
@@ -100,6 +87,14 @@ export async function getMyPendingApprovals() {
         }
       },
       orderBy: { createdAt: 'desc' }
+    });
+
+    // 🔴 THE FIX: Filter securely in JavaScript where the current step matches the active index and user clearance
+    const pendingWorkflows = activeWorkflows.filter((workflow: any) => {
+      const currentStep = workflow.steps.find((s: any) => s.stepOrder === workflow.currentStepIndex);
+      if (!currentStep || currentStep.status !== "PENDING") return false;
+      
+      return currentStep.specificUserId === id || currentStep.requiredRoleId === role;
     });
 
     return { success: true, workflows: pendingWorkflows };
@@ -116,7 +111,6 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
     const session = await auth();
     if (!session || !session.user) return { success: false, error: "Unauthorized" };
 
-    // 🔴 THE FIX: Added as any to destructuring
     const { id, role } = session.user as any;
 
     // Retrieve the workflow and all its steps
@@ -141,7 +135,6 @@ export async function executeWorkflowDecision(workflowId: string, decision: 'APP
     }
 
     // Process the transaction
-    // 🔴 THE FIX: Explicitly typed tx as any
     await db.$transaction(async (tx: any) => {
       // 1. Mark the current step as resolved by this specific user
       await tx.workflowStep.update({
