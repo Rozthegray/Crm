@@ -13,7 +13,7 @@ export async function transmitSecureMessage(receiverId: string, content: string)
   try {
     const messagePayload = {
       id: crypto.randomUUID(),
-      senderId: session.user.id,
+      senderId: (session.user as any).id, // 🔴 THE FIX
       senderName: session.user.name,
       content,
       timestamp: new Date().toISOString()
@@ -90,8 +90,8 @@ export async function getChatHistory(contactId: string) {
     const messages = await db.message.findMany({
       where: {
         OR: [
-          { senderId: session.user.id, receiverId: contactId },
-          { senderId: contactId, receiverId: session.user.id }
+          { senderId: (session.user as any).id, receiverId: contactId }, // 🔴 THE FIX
+          { senderId: contactId, receiverId: (session.user as any).id }  // 🔴 THE FIX
         ]
       },
       orderBy: { createdAt: 'asc' }
@@ -116,7 +116,7 @@ export async function sendDirectMessage(receiverId: string, content?: string, im
     // 1. Save to the immutable database ledger
     const savedMessage = await db.message.create({
       data: {
-        senderId: session.user.id,
+        senderId: (session.user as any).id, // 🔴 THE FIX
         receiverId,
         content: content || null,
         imageUrl: imageUrl || null
@@ -128,7 +128,7 @@ export async function sendDirectMessage(receiverId: string, content?: string, im
       id: savedMessage.id,
       message: content,
       imageUrl: imageUrl,
-      senderId: session.user.id,
+      senderId: (session.user as any).id, // 🔴 THE FIX
       timestamp: savedMessage.createdAt,
       isDeleted: false
     });
@@ -156,7 +156,7 @@ export async function broadcastMessage(content: string, targetRole?: string, ima
       data: { 
         content, 
         imageUrl: imageUrl || null,
-        senderId: session.user.id 
+        senderId: (session.user as any).id // 🔴 THE FIX
       } 
     });
     
@@ -167,7 +167,7 @@ export async function broadcastMessage(content: string, targetRole?: string, ima
       id: savedMessage.id,
       message: content,
       imageUrl: imageUrl,
-      senderId: session.user.id,
+      senderId: (session.user as any).id, // 🔴 THE FIX
       timestamp: savedMessage.createdAt,
       isDeleted: false,
       isBroadcast: true
@@ -191,7 +191,7 @@ export async function deleteMessage(messageId: string) {
     if (!msg) return { success: false, error: "Message record not found." };
 
     // Strict validation: Only the original sender or an Admin can scrub a message
-    const canDelete = msg.senderId === session.user.id || ['ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role);
+    const canDelete = msg.senderId === (session.user as any).id || ['ADMIN', 'SUPER_ADMIN'].includes((session?.user as any)?.role); // 🔴 THE FIX
     if (!canDelete) return { success: false, error: "Security Exception: Unauthorized to alter this record." };
 
     // Soft delete to maintain audit log integrity
