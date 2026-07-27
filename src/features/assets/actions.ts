@@ -12,9 +12,9 @@ export async function requestAsset(deviceType: string, reason: string) {
     if (!session || !session.user) return { success: false, error: "Unauthorized access." };
 
     const request = await db.assetRequest.create({
-      data: {
-        userId: session.user.id,
-        deviceType,
+        data: {
+          userId: (session.user as any).id,
+          deviceType,
         reason,
         status: "PENDING"
       }
