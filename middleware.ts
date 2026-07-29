@@ -4,8 +4,8 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
   // 🔴 THE FIX: Swapped AUTH_SECRET to NEXTAUTH_SECRET to match your Vercel deployment
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const { pathname } = req.nextUrl;
+const token = await getToken({ req });
+const { pathname } = req.nextUrl;
 
   // 1. Define Public & System Routes
   const isPublicRoute = pathname.startsWith('/login') || 
