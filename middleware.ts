@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  // Read the secure JWT directly at the Edge
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  // 🔴 THE FIX: Swapped AUTH_SECRET to NEXTAUTH_SECRET to match your Vercel deployment
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
   // 1. Define Public & System Routes
@@ -41,15 +41,17 @@ export async function middleware(req: NextRequest) {
   // 4. THE COMMAND & CONTROL ROUTERS
   // ==========================================
 
-  // A. Super Admin Zone (Global Overseer)
-  if (pathname.startsWith('/admin')) {
+  // 🔴 THE FIX: Reordered logic. Catch the most specific route first.
+  
+  // A. Super Admin Zone (Global Overseer - Branches Only)
+  if (pathname.startsWith('/admin/branches')) {
     if (role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/dashboard', req.url)); 
     }
   }
   
-  // B. Branch Manager Zone (Local Command)
-  else if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/branches')) {
+  // B. Branch Manager Zone (Local Command - All other Admin routes)
+  else if (pathname.startsWith('/admin')) {
     if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
