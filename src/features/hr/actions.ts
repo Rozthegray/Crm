@@ -199,7 +199,8 @@ export async function rejectEmployeeAccount(employeeId: string) {
 
     const updatedEmployee = await db.user.update({
       where: { id: employeeId },
-      data: { status: "REJECTED" } // Changed from "TERMINATED" to "REJECTED" for clarity in the UI
+      // 🔴 THE FIX: Reverted back to Prisma's official strict Enum "TERMINATED"
+      data: { status: "TERMINATED" } 
     });
 
     // Fire the external SMTP email
