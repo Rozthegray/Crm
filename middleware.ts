@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  // 🔴 THE FIX: Explicitly pass the secret and the secureCookie flag for Vercel Edge
   const token = await getToken({ 
     req, 
     secret: process.env.NEXTAUTH_SECRET,
@@ -12,14 +11,17 @@ export async function middleware(req: NextRequest) {
   
   const { pathname } = req.nextUrl;
 
-  // 1. Define Public & System Routes
-  const isPublicRoute = pathname.startsWith('/login') || 
-                        pathname.startsWith('/register') || 
-                        pathname.startsWith('/api/auth') || 
-                        pathname.startsWith('/api/seed');
+  // 🔴 THE FIX: Machine-to-Machine Endpoints. 
+  // Never redirect NextAuth internal API calls. Always let them pass through.
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/seed')) {
+    return NextResponse.next();
+  }
 
-  // 2. Handle Logged-In Users trying to access Public Routes (e.g., /login)
-  if (isPublicRoute) {
+  // 1. Define User-Facing Public UI Routes
+  const isAuthUIRoute = pathname.startsWith('/login') || pathname.startsWith('/register');
+
+  // 2. Handle Logged-In Users trying to access the Login/Register screens
+  if (isAuthUIRoute) {
     if (token) {
       // Smart Auto-Routing based on Role Hierarchy
       if (token.role === 'SUPER_ADMIN') return NextResponse.redirect(new URL('/admin/branches', req.url));
@@ -32,7 +34,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Absolute Perimeter Defense: Block all unauthenticated traffic
+  // 3. Absolute Perimeter Defense: Block all unauthenticated traffic from protected routes
   if (!token) {
     const loginUrl = new URL('/login', req.url);
     // Remember where they wanted to go, so we can route them there after login
