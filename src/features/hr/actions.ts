@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -84,9 +84,6 @@ const verifyHrClearance = async () => {
 };
 
 // ============================================================================
-// 1. FETCH ISOLATED BRANCH DATA
-// ============================================================================
-// ============================================================================
 // 1. FETCH ISOLATED BRANCH DATA (With Super Admin Cross-Branch Override)
 // ============================================================================
 export async function getBranchDirectory() {
@@ -149,7 +146,7 @@ export async function approveEmployeeAccount(employeeId: string, baseSalaryAmoun
     const targetEmployee = await db.user.findUnique({ where: { id: employeeId } });
     
     // Cross-branch manipulation block (Admins bypass this too if they don't have a branchId restriction)
-if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
+    if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
         return { success: false, error: "Cross-branch manipulation strictly prohibited." };
     }
 
@@ -196,13 +193,13 @@ export async function rejectEmployeeAccount(employeeId: string) {
 
     const targetEmployee = await db.user.findUnique({ where: { id: employeeId } });
     
-if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
+    if ((adminUser as any).role === 'HR' && targetEmployee?.branchId !== (adminUser as any).branchId) {
         return { success: false, error: "Cross-branch manipulation strictly prohibited." };
     }
 
     const updatedEmployee = await db.user.update({
       where: { id: employeeId },
-      data: { status: "TERMINATED" } // Locks them out permanently
+      data: { status: "REJECTED" } // Changed from "TERMINATED" to "REJECTED" for clarity in the UI
     });
 
     // Fire the external SMTP email
@@ -277,20 +274,5 @@ export async function adminUpdateEmployee(employeeId: string, data: {
   } catch (error: any) {
     console.error("Failed to update employee:", error);
     return { success: false, error: error.message || "Database transaction failed." };
-  }
-}
-
-export async function rejectEmployeeAccount(userId: string) {
-  try {
-    // 1. Verify authorization (Assuming you have auth checks here)
-    // 2. Update the database
-    await db.user.update({
-      where: { id: userId },
-      data: { status: "REJECTED" } // Or simply delete the record: await db.user.delete(...)
-    });
-    return { success: true };
-  } catch (error) {
-    console.error("Rejection Error:", error);
-    return { success: false, error: "Failed to reject applicant." };
   }
 }
