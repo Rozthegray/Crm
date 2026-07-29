@@ -279,3 +279,18 @@ export async function adminUpdateEmployee(employeeId: string, data: {
     return { success: false, error: error.message || "Database transaction failed." };
   }
 }
+
+export async function rejectEmployeeAccount(userId: string) {
+  try {
+    // 1. Verify authorization (Assuming you have auth checks here)
+    // 2. Update the database
+    await db.user.update({
+      where: { id: userId },
+      data: { status: "REJECTED" } // Or simply delete the record: await db.user.delete(...)
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Rejection Error:", error);
+    return { success: false, error: "Failed to reject applicant." };
+  }
+}
