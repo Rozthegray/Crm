@@ -3,9 +3,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  // 🔴 THE FIX: Swapped AUTH_SECRET to NEXTAUTH_SECRET to match your Vercel deployment
-const token = await getToken({ req });
-const { pathname } = req.nextUrl;
+  // 🔴 THE FIX: Explicitly pass the secret and the secureCookie flag for Vercel Edge
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production'
+  });
+  
+  const { pathname } = req.nextUrl;
 
   // 1. Define Public & System Routes
   const isPublicRoute = pathname.startsWith('/login') || 
@@ -40,8 +45,6 @@ const { pathname } = req.nextUrl;
   // ==========================================
   // 4. THE COMMAND & CONTROL ROUTERS
   // ==========================================
-
-  // 🔴 THE FIX: Reordered logic. Catch the most specific route first.
   
   // A. Super Admin Zone (Global Overseer - Branches Only)
   if (pathname.startsWith('/admin/branches')) {
